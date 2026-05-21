@@ -1,45 +1,62 @@
-# 敏感凭证
+# ─── 敏感凭证 ──────────────────────────────────
 config/.github_token
 config/*_secret*.py
 config/*_secret*.json
 *.pem
 *.key
 
-# 依赖
-node_modules/
+# ─── Python ────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.egg-info/
+dist/
+build/
+*.egg
 .venv/
 venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# 系统文件
+# ─── 前端 ─────────────────────────────────────
+node_modules/
+dist/
+.turbo/
+
+# ─── 系统文件 ─────────────────────────────────
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 *~
 
-# 日志/数据输出
-data/reports/*
-data/models/*
-!data/reports/.gitkeep
-!data/models/.gitkeep
+# ─── 数据输出 ─────────────────────────────────
 *.log
 *.xlsx
 *.xls
 *.csv
-output/
+data/tmp/
+data/reports/*
+!data/reports/.gitkeep
+data/models/*
+!data/models/.gitkeep
 
-# IDE
+# ─── IDE ───────────────────────────────────────
 .vscode/
 .idea/
 *.sublime-*
 
-# WSL跨系统
-/mnt/
-
-# OpenClaw session/lock files
+# ─── 记忆文件（含敏感信息） ──────────────────
+memory/
+.openclaw/
 *.jsonl
 *.lock
-.openclaw/
+
+# ─── WSL 跨系统 ──────────────────────────────
+/mnt/
+
+# ─── 项目运行时文件 ──────────────────────────
+scripts/adhoc/
