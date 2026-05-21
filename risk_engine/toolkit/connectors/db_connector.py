@@ -9,7 +9,7 @@
 支持的数据源:
     risk      风险 StarRocks      47.119.181.195:9030    ods
     ts        淘顺分期 MySQL      taoshunfq...:3306     taoshun_fenqi
-    bl        百旅             bailv...:3306         bailv_np
+    bl        百旅分期             bailv...:3306         bailv_np
     bl_risk   百旅风控             bailv...:3306         bailv_np
     tr_risk   通融分期             腾讯云CLB:3306        bailv_np
     tr_fusing 通融分期(同)         腾讯云CLB:3306        bailv_np
@@ -17,8 +17,6 @@
     ts_fusing 淘顺风控(旧/同)      taoshunfq...:3306     taoshun_fenqi
     tsck      淘顺全库             阿里云RDS:3306        taoshun_all
     hive      Hive大数据           47.107.182.51:10000   ods
-    dws       风险库-dws           47.119.181.195:9030   dws
-    dwd       风险库-dwd           47.119.181.195:9030   dwd
     local     本地库               localhost:3306        risk_control
 
 密码来源（优先级）:
