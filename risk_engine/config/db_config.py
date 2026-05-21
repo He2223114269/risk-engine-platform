@@ -38,7 +38,7 @@ DB_CONFIG = {
         "database": "taoshun_fenqi",
     },
 
-    # ── 百力分期 ──────────────────────────────────────
+    # ── 百旅 ──────────────────────────────────────
     "bl": {
         "host": "bailv.rwlb.rds.aliyuncs.com",
         "port": 3306,
@@ -48,7 +48,7 @@ DB_CONFIG = {
         "database": "bailv_np",
     },
 
-    # ── 百力风控 ──────────────────────────────────────
+    # ── 百旅风控 ──────────────────────────────────────
     "bl_risk": {
         "host": "bailv.rwlb.rds.aliyuncs.com",
         "port": 3306,
@@ -114,25 +114,6 @@ DB_CONFIG = {
         "password": "",
         "env_var": "HIVE_DB_PASSWORD",
         "database": "ods",
-    },
-
-    # ── DWS / DWD（风险库的不同 schema） ──────────────
-    "dws": {
-        "host": "47.119.181.195",
-        "port": 9030,
-        "user": "taoshun_fk_zf",
-        "password": "",
-        "env_var": "RISK_DB_PASSWORD",
-        "database": "dws",
-    },
-
-    "dwd": {
-        "host": "47.119.181.195",
-        "port": 9030,
-        "user": "taoshun_fk_zf",
-        "password": "",
-        "env_var": "RISK_DB_PASSWORD",
-        "database": "dwd",
     },
 
     # ── 本地库 ────────────────────────────────────────
