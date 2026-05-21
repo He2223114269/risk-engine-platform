@@ -3,21 +3,41 @@
 """
 ============================================================================
 模块名称 : db_connector
-功能描述 : 数据库连接器 — 单类通吃所有数据源
-          通过 data_type 参数自动选择对应的库、账号、主机
-          支持 StarRocks(风险库) / MySQL(淘顺分期) / 本地库
-          统一方法: get_data / to_sql / insert_data / close
+功能描述 : 数据库连接器 — get_data 类，通过 data_type 切换不同数据源
+          设计继承自原 connect_db_offline.py，保留全部 data_type 和方法
 
-设计思路:
-  get_data 类封装了所有数据库连接配置和操作，
-  只需在初始化时传入 data_type 即可切换数据源:
-    conn = get_data(data_type='risk')  → 连风险 StarRocks
-    conn = get_data(data_type='ts')    → 连淘顺分期 MySQL
-    conn = get_data(data_type='local') → 连本地库
+支持的数据源:
+    risk      风险 StarRocks      47.119.181.195:9030    ods
+    ts        淘顺分期 MySQL      taoshunfq...:3306     taoshun_fenqi
+    bl        百力分期             bailv...:3306         bailv_np
+    bl_risk   百力风控             bailv...:3306         bailv_np
+    tr_risk   通融分期             腾讯云CLB:3306        bailv_np
+    tr_fusing 通融分期(同)         腾讯云CLB:3306        bailv_np
+    ts_risk   淘顺风控(旧)         taoshunfq...:3306     taoshun_fenqi
+    ts_fusing 淘顺风控(旧/同)      taoshunfq...:3306     taoshun_fenqi
+    tsck      淘顺全库             阿里云RDS:3306        taoshun_all
+    hive      Hive大数据           47.107.182.51:10000   ods
+    dws       风险库-dws           47.119.181.195:9030   dws
+    dwd       风险库-dwd           47.119.181.195:9030   dwd
+    local     本地库               localhost:3306        risk_control
+
+密码来源（优先级）:
+  1. risk_engine/config/db_config_secret.py（含明文密码，已 gitignore）
+  2. risk_engine/config/db_config.py（模板，密码为空则走环境变量）
+  3. 环境变量（如 RISK_DB_PASSWORD、TS_DB_PASSWORD 等）
+
+用法:
+    from risk_engine.toolkit.connectors import get_data
+
+    conn = get_data(data_type='risk')
+    df = conn.get_data("SELECT * FROM ods.some_table LIMIT 10")
+    conn.close()
+
+    with get_data(data_type='ts') as conn:
+        df = conn.get_data("SELECT * FROM taoshun_fenqi.some_table LIMIT 5")
 
 更新历史:
-  2026-05-21, Jingluo, v1.0.0 — 基于原 connect_db_offline.py 重构
-  2026-05-21, Jingluo, v1.0.0 — 密码改环境变量读取，新增上下文管理器
+  2026-05-21, Jingluo, v2.0.0 — 配置分离到 db_config[_secret].py
 ============================================================================
 """
 
@@ -31,119 +51,88 @@ from typing import Optional
 __all__ = ["get_data"]
 
 
-# ===== 数据库配置 =====
-# 密码优先从环境变量读取，未设置时使用默认值（本地库可用）
-# 生产库密码请在 .env 或系统环境变量中配置
+# ===== 加载配置（优先明文文件，其次模板文件+环境变量） =====
 
-DB_CONFIG = {
-    "starrocks": {
-        "host": "47.119.181.195",
-        "port": 9030,
-        "user": "taoshun_fk_zf",
-        "password_env": "RISK_DB_PASSWORD",
-        "password_default": "P5]xk!9,u$t[JIPf1~4)",
-        "database_default": "ods",
-    },
-    "risk": {
-        "host": "47.119.181.195",
-        "port": 9030,
-        "user": "taoshun_fk_zf",
-        "password_env": "RISK_DB_PASSWORD",
-        "password_default": "P5]xk!9,u$t[JIPf1~4)",
-        "database_default": "ods",
-    },
-    "ts": {
-        "host": "taoshunfq.rwlb.rds.aliyuncs.com",
-        "port": 3306,
-        "user": "taoshunfenqi_fk_ZF",
-        "password_env": "TS_DB_PASSWORD",
-        "password_default": "taoshunfenqi_fk_zfa@csts1314*",
-        "database_default": "taoshun_fenqi",
-    },
-    "local": {
-        "host": "localhost",
-        "port": 3306,
-        "user": "root",
-        "password_env": "LOCAL_DB_PASSWORD",
-        "password_default": "222311",
-        "database_default": "risk_control",
-    },
-    "dws": {
-        "host": "47.119.181.195",
-        "port": 9030,
-        "user": "taoshun_fk_zf",
-        "password_env": "RISK_DB_PASSWORD",
-        "password_default": "P5]xk!9,u$t[JIPf1~4)",
-        "database_default": "dws",
-    },
-    "dwd": {
-        "host": "47.119.181.195",
-        "port": 9030,
-        "user": "taoshun_fk_zf",
-        "password_env": "RISK_DB_PASSWORD",
-        "password_default": "P5]xk!9,u$t[JIPf1~4)",
-        "database_default": "dwd",
-    },
-}
+def _load_config(data_type: str) -> dict:
+    """
+    加载指定 data_type 的数据库配置
 
+    优先级:
+      1. db_config_secret.py（含明文密码，已 gitignore）
+      2. db_config.py（模板，密码为空则读环境变量）
+    """
+    config = None
 
-def _get_password(config: dict) -> str:
-    """优先从环境变量读取密码，否则用默认值"""
-    env_var = config.get("password_env")
-    if env_var:
-        env_pwd = os.environ.get(env_var)
+    # 1. 尝试加载明文配置
+    try:
+        from risk_engine.config import db_config_secret
+        config = db_config_secret.DB_CONFIG.get(data_type)
+        if config:
+            return dict(config)
+    except (ImportError, AttributeError):
+        pass
+
+    # 2. 尝试加载模板配置
+    try:
+        from risk_engine.config import db_config
+        config = db_config.DB_CONFIG.get(data_type)
+    except (ImportError, AttributeError):
+        pass
+
+    if config is None:
+        raise ValueError(
+            f"不支持的 data_type: '{data_type}'。"
+            f"请检查 risk_engine/config/db_config[_secret].py 中是否包含此类型"
+        )
+
+    config = dict(config)
+
+    # 3. 如果密码为空，尝试环境变量
+    if not config.get("password"):
+        env_var = config.get("env_var", "")
+        env_pwd = os.environ.get(env_var) if env_var else None
         if env_pwd:
-            return env_pwd
-    return config.get("password_default", "")
+            config["password"] = env_pwd
+        else:
+            raise ConnectionError(
+                f"{data_type} 密码未配置。请:\n"
+                f"  1. 创建 risk_engine/config/db_config_secret.py（推荐）\n"
+                f"  2. 或设置环境变量 {env_var}"
+            )
 
+    return config
+
+
+# ===== 主类 =====
 
 class get_data:
     """
-    数据库连接操作类 — 兼容原 connect_db_offline 用法
+    数据库连接操作类
 
-    通过 data_type 选择数据库，所有方法统一调用。
+    通过 data_type 选择数据库，统一方法集。
 
     Usage:
-        # 基础用法
         conn = get_data(data_type='risk')
         df = conn.get_data("SELECT * FROM ods.some_table LIMIT 10")
+        conn.close()
 
-        # 切换库
-        conn = get_data(data_type='ts')        # 淘顺分期
-        conn = get_data(data_type='local')     # 本地库
-        conn = get_data(data_type='dws')       # 风险库 dws 库
-
-        # 上下文管理器（自动关闭）
-        with get_data(data_type='risk') as conn:
-            df = conn.get_data("SELECT count(*) as cnt FROM ods.some_table")
-
-        # 写入数据
-        conn.to_sql("my_table", df)
-
-        # 带日志的插入
-        succ, fail = conn.insert_data(df, "my_table", insert_type='upsert')
+        with get_data(data_type='dws') as conn:
+            df = conn.get_data("SELECT * FROM dws_credit_yzf_order_complete LIMIT 5")
     """
 
     def __init__(self, data_type: str = "risk", db: Optional[str] = None):
         """
         Args:
-            data_type: 数据库类型
-                'starrocks' / 'risk' — 风险 StarRocks（默认 ods 库）
-                'dws' — 风险 StarRocks 的 dws 库
-                'dwd' — 风险 StarRocks 的 dwd 库
-                'ts'  — 淘顺分期 MySQL
-                'local' — 本地 MySQL
-            db: 指定数据库名（覆盖默认），主要用于 risk 类型切换 schema
+            data_type: 数据库类型，见模块文档
+            db: 覆盖默认数据库名（主要用于 risk 类型切换 schema）
         """
-        config = DB_CONFIG.get(data_type)
-        if config is None:
-            raise ValueError(f"不支持的 data_type: '{data_type}'。可选: {list(DB_CONFIG.keys())}")
+        config = _load_config(data_type)
 
         self.mysql_host = config["host"]
         self.mysql_port = config["port"]
         self.mysql_user = config["user"]
-        self.mysql_password = _get_password(config)
-        self.mysql_db = db if db else config["database_default"]
+        self.mysql_password = config["password"]
+        self.mysql_db = db if db else config["database"]
         self.data_type = data_type
 
         self.conn: Optional[pymysql.Connection] = None
@@ -152,7 +141,7 @@ class get_data:
     # ─── 连接管理 ───────────────────────────────────────────────
 
     def connect_to_database(self) -> None:
-        """连接数据库（初始化时自动调用，也可手动重连）"""
+        """连接数据库"""
         try:
             self.conn = pymysql.connect(
                 host=self.mysql_host,
@@ -166,7 +155,7 @@ class get_data:
             )
         except Exception as e:
             raise ConnectionError(
-                f"连接失败: {self.mysql_user}@{self.mysql_host}:{self.mysql_port}/{self.mysql_db} — {e}"
+                f"连接失败: {self.mysql_user}@{self.mysql_host}:{self.mysql_port}/{self.mysql_db}\n  {e}"
             )
 
     def close(self) -> None:
@@ -181,7 +170,7 @@ class get_data:
                 self.conn = None
 
     def is_connection_open(self) -> bool:
-        """检查连接是否可用，断开时自动尝试重连"""
+        """检查连接是否可用"""
         try:
             if self.conn:
                 self.conn.ping(reconnect=True)
@@ -221,55 +210,45 @@ class get_data:
         sql = f"SELECT {columns} FROM {self.mysql_db}.{sheet_name}"
         return self.get_data(sql)
 
-    # ─── 批量查询（按 ID 分批，用于 StarRocks 大表） ─────────
+    # ─── 分批查询（用于 StarRocks 大 IN 查询） ───────────────
 
     def injoin_data(self, id_list: list, sql_content: str) -> pd.DataFrame:
         """
-        每次 10000 条分批查询，适用于 StarRocks 大 IN 查询
+        每次 10000 条分批查询
 
         Args:
             id_list: ID 列表
-            sql_content: SQL 前缀，如 "SELECT * FROM table WHERE id IN"
+            sql_content: SQL 前缀，如 "SELECT * FROM table WHERE id"
 
         Returns:
             合并后的 DataFrame
         """
-        import numpy as np
-
         result = pd.DataFrame()
         for i in range(0, len(id_list), 10000):
-            chunk_ids = id_list[i : i + 10000]
-            if len(chunk_ids) == 1:
-                chunk_ids = chunk_ids + [chunk_ids[0]]
-            sql = f"{sql_content} IN {tuple(chunk_ids)}"
-            chunk = pd.read_sql_query(sql, self.conn)
-            result = pd.concat([result, chunk], ignore_index=True)
+            chunk = id_list[i : i + 10000]
+            if len(chunk) == 1:
+                chunk = chunk + [chunk[0]]
+            sql = f"{sql_content} IN {tuple(chunk)}"
+            chunk_df = pd.read_sql_query(sql, self.conn)
+            result = pd.concat([result, chunk_df], ignore_index=True)
         return result
 
     # ─── 数据写入 ───────────────────────────────────────────────
 
     def to_sql(self, table_name: str, data: pd.DataFrame) -> None:
-        """
-        将 DataFrame 写入数据库表（INSERT）
-
-        Args:
-            table_name: 目标表名
-            data: 要写入的数据
-        """
+        """将 DataFrame 写入数据库表（INSERT）"""
         if not self.is_connection_open():
             self.connect_to_database()
 
         columns_list = list(data.columns)
-        columns_str = "`,`".join(columns_list)
-        columns_str = f"`{columns_str}`"
+        columns_str = ",".join([f"`{c}`" for c in columns_list])
         fill_str = ",".join(["%s"] * len(columns_list))
-
-        sql_insert = f"INSERT INTO {table_name} ({columns_str}) VALUES ({fill_str})"
+        sql = f"INSERT INTO {table_name} ({columns_str}) VALUES ({fill_str})"
         write_in = [tuple(row) for row in data[columns_list].to_numpy()]
 
         cursor = self.conn.cursor()
         try:
-            cursor.executemany(sql_insert, write_in)
+            cursor.executemany(sql, write_in)
             self.conn.commit()
         except Exception:
             self.conn.rollback()
@@ -284,95 +263,72 @@ class get_data:
         insert_type: str = "insert",
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
-        将 DataFrame 插入数据库，记录成功/失败明细
+        插入数据，记录成功/失败明细
 
         Args:
             data: 要插入的数据
             table_name: 目标表名
-            insert_type: 插入模式
-                'insert'      — 普通 INSERT
-                'replace'     — REPLACE INTO
-                'upsert'      — INSERT ... ON DUPLICATE KEY UPDATE
-                'replace_all' — 先清空表再 INSERT
+            insert_type: insert / replace / upsert / replace_all
 
         Returns:
-            (success_df, failed_df) — 成功和失败的数据
+            (success_df, failed_df)
         """
         if not self.is_connection_open():
             self.connect_to_database()
 
         cursor = self.conn.cursor()
         cols = ",".join([f"`{col}`" for col in data.columns])
-        values_template = "(" + ",".join(["%s"] * len(data.columns)) + ")"
+        values = "(" + ",".join(["%s"] * len(data.columns)) + ")"
 
         if insert_type == "insert":
-            sql_prefix = f"INSERT INTO `{table_name}` ({cols}) VALUES "
-            sql_suffix = ""
+            prefix = f"INSERT INTO `{table_name}` ({cols}) VALUES "
+            suffix = ""
         elif insert_type == "replace":
-            sql_prefix = f"REPLACE INTO `{table_name}` ({cols}) VALUES "
-            sql_suffix = ""
+            prefix = f"REPLACE INTO `{table_name}` ({cols}) VALUES "
+            suffix = ""
         elif insert_type == "upsert":
-            update_clause = ", ".join([f"`{col}`=VALUES(`{col}`)" for col in data.columns])
-            sql_prefix = f"INSERT INTO `{table_name}` ({cols}) VALUES "
-            sql_suffix = f" ON DUPLICATE KEY UPDATE {update_clause}"
+            update = ", ".join([f"`{c}`=VALUES(`{c}`)" for c in data.columns])
+            prefix = f"INSERT INTO `{table_name}` ({cols}) VALUES "
+            suffix = f" ON DUPLICATE KEY UPDATE {update}"
         elif insert_type == "replace_all":
-            try:
-                cursor.execute(f"DELETE FROM `{table_name}`")
-                self.conn.commit()
-            except Exception:
-                self.conn.rollback()
-                return pd.DataFrame(), data
-            sql_prefix = f"INSERT INTO `{table_name}` ({cols}) VALUES "
-            sql_suffix = ""
+            cursor.execute(f"DELETE FROM `{table_name}`")
+            self.conn.commit()
+            prefix = f"INSERT INTO `{table_name}` ({cols}) VALUES "
+            suffix = ""
         else:
-            raise ValueError("insert_type 仅支持: insert / replace / upsert / replace_all")
+            raise ValueError("insert_type: insert / replace / upsert / replace_all")
 
-        success_rows = []
-        failed_rows = []
+        success, failed = [], []
         for idx, row in enumerate(data.itertuples(index=False, name=None)):
             try:
-                sql = sql_prefix + values_template + sql_suffix
-                cursor.execute(sql, row)
-                success_rows.append(data.iloc[idx])
+                cursor.execute(prefix + values + suffix, row)
+                success.append(data.iloc[idx])
             except Exception:
-                failed_rows.append(data.iloc[idx])
-
+                failed.append(data.iloc[idx])
         self.conn.commit()
         cursor.close()
 
-        success_df = pd.DataFrame(success_rows) if success_rows else pd.DataFrame(columns=data.columns)
-        failed_df = pd.DataFrame(failed_rows) if failed_rows else pd.DataFrame(columns=data.columns)
-        return success_df, failed_df
+        cols_list = list(data.columns)
+        return (
+            pd.DataFrame(success, columns=cols_list) if success else pd.DataFrame(columns=cols_list),
+            pd.DataFrame(failed, columns=cols_list) if failed else pd.DataFrame(columns=cols_list),
+        )
 
     # ─── 更新 / 删除 ────────────────────────────────────────────
 
     def update_sql(self, table_name: str, condition_data: pd.DataFrame, value_data: pd.DataFrame) -> None:
-        """
-        批量更新数据
-
-        Args:
-            table_name: 目标表名
-            condition_data: WHERE 条件列
-            value_data: SET 值的列
-        """
+        """批量更新数据"""
         if condition_data.shape[0] != value_data.shape[0]:
             raise ValueError("condition_data 和 value_data 行数不一致")
 
-        values_columns = list(value_data.columns)
-        condition_columns = list(condition_data.columns)
-
-        values_str = ",".join([f"{c}=%s" for c in values_columns])
-        condition_str = " AND ".join([f"{c}=%s" for c in condition_columns])
-
-        sql_update = f"UPDATE {table_name} SET {values_str} WHERE {condition_str}"
-        write_in = [
-            tuple(row)
-            for row in pd.concat([value_data, condition_data], axis=1).to_numpy()
-        ]
+        set_str = ",".join([f"{c}=%s" for c in value_data.columns])
+        where_str = " AND ".join([f"{c}=%s" for c in condition_data.columns])
+        sql = f"UPDATE {table_name} SET {set_str} WHERE {where_str}"
+        rows = [tuple(r) for r in pd.concat([value_data, condition_data], axis=1).to_numpy()]
 
         cursor = self.conn.cursor()
         try:
-            cursor.executemany(sql_update, write_in)
+            cursor.executemany(sql, rows)
             self.conn.commit()
         except Exception:
             self.conn.rollback()
@@ -381,22 +337,17 @@ class get_data:
             cursor.close()
 
     def for_update_sql(self, table_name: str, condition_data: pd.DataFrame, value_data: pd.DataFrame) -> None:
-        """逐条更新（慢但可控，适合小批量）"""
-        total_data = pd.concat([condition_data, value_data], axis=1)
+        """逐条更新（慢但可控）"""
+        total = pd.concat([condition_data, value_data], axis=1)
         cursor = self.conn.cursor()
         try:
-            for _, row in total_data.iterrows():
-                set_parts = [f'{col}="{row[col]}"' for col in value_data.columns]
-                set_value = ",".join(set_parts)
-
-                where_parts = []
-                for col in condition_data.columns:
-                    val = int(row[col]) if col == "id" else f'"{row[col]}"'
-                    where_parts.append(f'{col}={val}')
-                where_value = " AND ".join(where_parts)
-
-                sql = f"UPDATE {table_name} SET {set_value} WHERE {where_value}"
-                cursor.execute(sql)
+            for _, row in total.iterrows():
+                set_clause = ",".join([f'{c}="{row[c]}"' for c in value_data.columns])
+                where_clause = " AND ".join([
+                    f'{c}={int(row[c]) if c == "id" else chr(34) + str(row[c]) + chr(34)}'
+                    for c in condition_data.columns
+                ])
+                cursor.execute(f"UPDATE {table_name} SET {set_clause} WHERE {where_clause}")
             self.conn.commit()
         except Exception:
             self.conn.rollback()
@@ -405,19 +356,11 @@ class get_data:
             cursor.close()
 
     def clear_table(self, table_name: str) -> None:
-        """清空表数据"""
-        cursor = self.conn.cursor()
-        try:
-            cursor.execute(f"TRUNCATE TABLE {table_name}")
-            self.conn.commit()
-        except Exception:
-            self.conn.rollback()
-            raise
-        finally:
-            cursor.close()
+        """清空表"""
+        self.execute_sql(f"TRUNCATE TABLE {table_name}")
 
     def execute_sql(self, sql_sentence: str) -> None:
-        """执行任意 SQL（DDL/DML）"""
+        """执行任意 SQL"""
         cursor = self.conn.cursor()
         try:
             cursor.execute(sql_sentence)
@@ -432,14 +375,16 @@ class get_data:
 
     def table_exists(self, table_name: str) -> bool:
         """检查表是否存在"""
-        sql = f"SELECT COUNT(*) as cnt FROM information_schema.tables WHERE table_name='{table_name.split('.')[-1]}'"
-        df = self.get_data(sql)
+        tbl = table_name.split(".")[-1]
+        df = self.get_data(
+            f"SELECT COUNT(*) as cnt FROM information_schema.tables WHERE table_name='{tbl}'"
+        )
         return not df.empty and df.iloc[0]["cnt"] > 0
 
     def get_columns(self, table_name: str) -> pd.DataFrame:
         """获取表字段信息"""
-        sql = f"SHOW COLUMNS FROM `{table_name.replace('.', '`.`')}`"
-        return self.get_data(sql)
+        name = table_name.replace(".", "`.`")
+        return self.get_data(f"SHOW COLUMNS FROM `{name}`")
 
     # ─── 信息 ───────────────────────────────────────────────────
 
