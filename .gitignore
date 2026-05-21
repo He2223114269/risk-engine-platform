@@ -1,9 +1,20 @@
 # ─── 敏感凭证 ──────────────────────────────────
-config/.github_token
-config/*_secret*.py
-config/*_secret*.json
+*.token
+*_secret*.py
+*_secret*.json
 *.pem
 *.key
+.env
+
+# ─── OpenClaw 个人文件（非项目文件） ──────────
+AGENTS.md
+HEARTBEAT.md
+IDENTITY.md
+QUICK_START.md
+SOUL.md
+TOOLS.md
+USER.md
+.openclaw/
 
 # ─── Python ────────────────────────────────────
 __pycache__/
@@ -38,11 +49,7 @@ Thumbs.db
 *.xlsx
 *.xls
 *.csv
-data/tmp/
-data/reports/*
-!data/reports/.gitkeep
-data/models/*
-!data/models/.gitkeep
+/tmp/
 
 # ─── IDE ───────────────────────────────────────
 .vscode/
@@ -51,9 +58,6 @@ data/models/*
 
 # ─── 记忆文件（含敏感信息） ──────────────────
 memory/
-.openclaw/
-*.jsonl
-*.lock
 
 # ─── WSL 跨系统 ──────────────────────────────
 /mnt/
