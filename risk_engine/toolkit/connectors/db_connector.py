@@ -201,7 +201,17 @@ class get_data:
         """
         if not self.is_connection_open():
             self.connect_to_database()
-        return pd.read_sql_query(sql_content, self.conn)
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute(sql_content)
+            rows = cursor.fetchall()
+            if not rows:
+                return pd.DataFrame()
+            columns = [desc[0] for desc in cursor.description]
+            df = pd.DataFrame(rows, columns=columns)
+            return df
+        finally:
+            cursor.close()
 
     def get_newest_data(self, sheet_name: str, columns: str = "*") -> pd.DataFrame:
         """获取整表数据（便捷方法）"""
