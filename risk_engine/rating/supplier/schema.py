@@ -29,6 +29,7 @@ class SupplierEvaluation:
     supplier_id: str
 
     # ── 基本信息 ──
+    supplier_name: Optional[str] = None
     province: Optional[str] = None
     cooperate_status: Optional[str] = "正常"
 
@@ -103,6 +104,7 @@ def df_to_records(df, data_date: date) -> list[dict]:
     for _, row in df.iterrows():
         record = SupplierEvaluation(
             supplier_id=row.get("supplier_code"),
+            supplier_name=row.get("supplier_name"),
             province=row.get("province"),
             # extract 阶段只填充原始维度，评分字段由 score.py 填充
             data_date=data_date,

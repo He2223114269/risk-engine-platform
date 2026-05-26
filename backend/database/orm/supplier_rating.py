@@ -14,13 +14,12 @@
 """
 
 from sqlalchemy import (
-    Column, String, Integer, Decimal, Date, DateTime, Text,
+    Column, String, Integer, Date, DateTime, Text,
     VARCHAR, INT, DECIMAL, DATE, DATETIME
 )
-from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+from backend.database.orm.base import Base
 
 
 class SupplierEvaluation(Base):
@@ -36,6 +35,7 @@ class SupplierEvaluation(Base):
     )
 
     # ── 基本信息 ──
+    supplier_name = Column(VARCHAR(128), comment="代理商名称")
     province = Column(VARCHAR(64), comment="省份")
     cooperate_status = Column(
         VARCHAR(16), default="正常",

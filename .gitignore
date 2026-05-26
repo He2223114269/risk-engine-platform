@@ -5,6 +5,7 @@
 *.pem
 *.key
 .env
+alembic.ini
 
 # ─── OpenClaw 个人文件（非项目文件） ──────────
 AGENTS.md

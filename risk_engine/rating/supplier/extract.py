@@ -56,12 +56,13 @@ def extract_all(
         datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=lookback_months * 30)
     ).strftime("%Y-%m-%d")
 
-    province_filter = f"AND province = '{province}'" if province else ""
+    province_filter = f"AND a.province = '{province}'" if province else ""
 
     sql = f"""
     WITH supplier_base AS (
         SELECT
             a.supplier_code,
+            a.supplier_name,
             a.province,
             a.store_id,
             a.order_no,
@@ -90,11 +91,14 @@ def extract_all(
           AND a.complete_time >= '{start_date}'
           AND a.complete_time < DATE_ADD('{end_date}', INTERVAL 1 DAY)
           AND a.supplier_code IS NOT NULL
+          AND a.supplier_code != ''
           {province_filter}
     )
     SELECT
         -- 展业时间
         supplier_code,
+        -- 取最常用的代理商名称（一个 code 偶尔有多个 name，取频次最高的）
+        MAX(supplier_name) AS supplier_name,
         province,
         MIN(complete_time) AS business_start_date,
         MAX(complete_time) AS last_active_date,

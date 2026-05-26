@@ -39,54 +39,40 @@ def run_supplier_rating(
     write_to_db: bool = True,
 ) -> pd.DataFrame:
     """
-    代理商评级全流程：提取 → 评分 → 评级 → 落库。
-
-    参数:
-        data_date: 数据截止日期 (yyyy-MM-dd)，默认今天
-        province:  省份筛选（None=全国）
-        lookback_months: 回溯月数
-        write_to_db: 是否写入本地库（默认写入）
-
-    返回:
-        最终评级结果 DataFrame
+    代理商评级全流程：提取 → 企查查 → 评分 → 评级 → 落库。
     """
     data_date = data_date or datetime.now().strftime("%Y-%m-%d")
     print(f"[{datetime.now().strftime('%H:%M:%S')}] 开始代理商评级流程")
     print(f"    数据截止: {data_date}, 省份: {province or '全国'}")
 
     # ── Step 1: 提取基础数据 ──
-    print(f"    1/5 提取基础数据...")
+    print(f"    1/6 提取基础数据...")
     df = extract_all(
         end_date=data_date,
         lookback_months=lookback_months,
         province=province,
     )
     print(f"        → {len(df)} 个代理商")
-
     if df.empty:
         print("    ⚠️ 无数据，流程终止")
         return df
 
     # ── Step 2: 提取门店质量 ──
-    print(f"    2/5 提取门店质量数据...")
+    print(f"    2/6 提取门店质量数据...")
     supplier_codes = df["supplier_code"].tolist()
     store_df = extract_store_quality(supplier_codes)
-
     if not store_df.empty:
         df = df.merge(store_df, on="supplier_code", how="left")
-        # 填充缺失值
         df["store_count_actual"] = df["store_count_actual"].fillna(df["store_count"])
         df["high_quality_store_count"] = df["high_quality_store_count"].fillna(0)
         df["regulated_store_count"] = df["regulated_store_count"].fillna(0)
         df["store_quality_rate"] = df.apply(
             lambda r: r["high_quality_store_count"] / r["store_count_actual"]
-            if r["store_count_actual"] > 0 else 0,
-            axis=1,
+            if r["store_count_actual"] > 0 else 0, axis=1,
         )
         df["regulated_store_rate"] = df.apply(
             lambda r: r["regulated_store_count"] / r["store_count_actual"]
-            if r["store_count_actual"] > 0 else 0,
-            axis=1,
+            if r["store_count_actual"] > 0 else 0, axis=1,
         )
     else:
         df["store_quality_rate"] = 0
@@ -94,15 +80,21 @@ def run_supplier_rating(
     print(f"        → 完成")
 
     # ── Step 3: 补充营业员人数 ──
-    print(f"    3/5 补充营业员人数...")
+    print(f"    3/6 补充营业员人数...")
     staff_df = extract_staff_count(supplier_codes)
     if not staff_df.empty:
         df = df.merge(staff_df, on="supplier_code", how="left")
         df["staff_count"] = df["staff_count"].fillna(0).astype(int)
     print(f"        → {'完成' if not staff_df.empty else '无数据'}")
 
-    # ── Step 4: 导入翼支付评级 ──
-    print(f"    4/5 导入翼支付评级...")
+    # ── Step 4: 导入企查查数据 ──
+    print(f"    4/6 导入企查查数据...")
+    _merge_qichacha(df, data_date)
+    qcc_count = df["has_qichacha"].sum()
+    print(f"        → 有企查查数据: {qcc_count}/{len(df)} ({qcc_count/len(df)*100:.1f}%)")
+
+    # ── Step 5: 导入翼支付评级 ──
+    print(f"    5/6 导入翼支付评级...")
     yzf_df = extract_yzf_rating()
     if not yzf_df.empty:
         df = df.merge(yzf_df, on="supplier_code", how="left")
@@ -110,8 +102,8 @@ def run_supplier_rating(
         df["yzf_rating"] = None
     print(f"        → {'完成' if not yzf_df.empty else '无评级数据'}")
 
-    # ── Step 5: 评分 ──
-    print(f"    5/5 评分 + 评级...")
+    # ── Step 6: 评分 + 评级 ──
+    print(f"    6/6 评分 + 评级...")
     df = score_all(df)
     df = assign_ratings(df)
 
@@ -123,7 +115,7 @@ def run_supplier_rating(
     print(f"        综合评分范围: {df['compliance_score'].min()} ~ {df['compliance_score'].max()}")
     print(f"        综合评分均值: {df['compliance_score'].mean():.0f}")
 
-    # ── Step 5: 写入本地库 ──
+    # ── 写入本地库 ──
     if write_to_db:
         _write_to_db(df, data_date)
         print(f"    ✅ 数据已写入本地库 risk_control.supplier_evaluation")
@@ -131,11 +123,61 @@ def run_supplier_rating(
     return df
 
 
+def _merge_qichacha(df: pd.DataFrame, data_date: str):
+    """从本地 MySQL 的 supplier_qichacha 表合并企查查数据到评分 DataFrame。"""
+    try:
+        conn = get_data(data_type="local")
+        qcc_df = conn.get_data("""
+            SELECT supplier_name,
+                   register_status, enterprise_type,
+                   registered_capital, paid_capital,
+                   credit_code, enterprise_scale, insured_count
+            FROM supplier_qichacha
+        """)
+        conn.close()
+
+        if qcc_df.empty:
+            _set_qcc_fields(df, False)
+            return
+
+        # 标准化名称（处理全角/半角括号差异）
+        df_name = df[["supplier_code", "supplier_name"]].copy()
+        df_name["_name"] = df_name["supplier_name"].str.replace("（", "(").str.replace("）", ")")
+        qcc_df["_name"] = qcc_df["supplier_name"].str.replace("（", "(").str.replace("）", ")")
+
+        # 左连接企查查数据
+        merged = df_name.merge(
+            qcc_df, on="_name", how="left"
+        )
+
+        # 把企查查字段合并回 df
+        qcc_fields = ["register_status", "enterprise_type", "registered_capital",
+                      "paid_capital", "credit_code", "enterprise_scale", "insured_count"]
+        for col in qcc_fields:
+            df[col] = merged[col].values
+
+        df.drop(columns=["_name"], inplace=True, errors="ignore")
+
+    except Exception as e:
+        print(f"    ⚠️ 企查查数据加载失败: {e}")
+        _set_qcc_fields(df, False)
+
+    # 标记是否有企查查数据
+    df["has_qichacha"] = df["register_status"].notna() & (df["register_status"] != "")
+
+
+def _set_qcc_fields(df, has_data: bool):
+    """设置企查查字段为 None"""
+    df["has_qichacha"] = has_data
+    for col in ["register_status", "enterprise_type", "registered_capital",
+                "paid_capital", "credit_code", "enterprise_scale", "insured_count"]:
+        df[col] = None
+
+
 def _write_to_db(df: pd.DataFrame, data_date: str):
     """将评分和评级结果写入本地 MySQL。"""
-    # 只取表中存在的列
     COLUMNS = [
-        "supplier_code", "province",
+        "supplier_code", "supplier_name", "province",
         "business_start_date", "last_active_date",
         "business_duration_days", "active_months", "recent_inactive_days",
         "store_count", "staff_count",
@@ -154,7 +196,6 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
         "compliance_score", "supplier_rating",
     ]
 
-    # 排除 generated 列（MySQL 不允许插入 generated 列）
     GENERATED_COLUMNS = {
         "store_quality_rate", "regulated_store_rate",
         "avg_store_amount", "avg_staff_amount",
@@ -165,24 +206,25 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
 
     existing = [c for c in COLUMNS if c in df.columns and c not in GENERATED_COLUMNS]
     records = df[existing].copy()
-    # 列名映射：风控引擎的 supplier_code → 数据库的 supplier_id
     records.rename(columns={"supplier_code": "supplier_id"}, inplace=True)
     records["data_date"] = data_date
 
-    # 构建 INSERT 语句（逐行写入，避免 NaN 问题）
     conn = get_data(data_type="local")
-
-    # 先清除旧数据
     conn.execute_sql(f"DELETE FROM supplier_evaluation WHERE data_date = '{data_date}'")
 
-    # 逐行写入
     cursor = conn.conn.cursor()
     cols = list(records.columns)
     placeholders = ",".join(["%s"] * len(cols))
     cols_quoted = ",".join([f"`{c}`" for c in cols])
     sql = f"INSERT INTO supplier_evaluation ({cols_quoted}) VALUES ({placeholders})"
 
+    success, failed = 0, 0
     for _, row in records.iterrows():
+        # 跳过空 supplier_id
+        sid = row.get('supplier_id') or row.get('supplier_code') or ''
+        if not str(sid).strip():
+            failed += 1
+            continue
         values = []
         for val in row:
             if pd.isna(val):
@@ -193,10 +235,12 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
                 values.append(val)
         try:
             cursor.execute(sql, tuple(values))
+            success += 1
         except Exception as e:
-            print(f'    ⚠️ 写入失败 [{row.iloc[0]}]: {e}')
-            conn.conn.rollback()
+            failed += 1
 
     conn.conn.commit()
+    if failed > 0:
+        print(f'    → 写入: {success} 成功, {failed} 失败（已跳过）')
     cursor.close()
     conn.close()

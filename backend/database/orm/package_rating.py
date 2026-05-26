@@ -3,11 +3,10 @@
 """
 
 from sqlalchemy import (
-    Column, String, Integer, Decimal, Date, VARCHAR, INT, DECIMAL, DATE
+    Column, String, Integer, Date, VARCHAR, INT, DECIMAL, DATE
 )
-from sqlalchemy.orm import declarative_base
 
-Base = declarative_base()
+from backend.database.orm.base import Base
 
 
 class PackageEvaluation(Base):
