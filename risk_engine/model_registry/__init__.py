@@ -14,3 +14,24 @@
 """
 
 from .evaluator import ModelEvaluator
+
+# ── 决策树模型注册 ──
+from risk_engine.model_registry.models.jiangxi_v1 import JiangxiV1
+
+# 模型注册表
+_MODELS: dict[str, type] = {
+    "jiangxi_v1": JiangxiV1,
+}
+
+
+def load(model_id: str):
+    """按 model_id 加载决策树模型实例"""
+    cls = _MODELS.get(model_id)
+    if cls is None:
+        raise ValueError(f"未知模型: {model_id}，可用: {list(_MODELS.keys())}")
+    return cls()
+
+
+def list_models() -> list[str]:
+    """列出所有已注册模型"""
+    return list(_MODELS.keys())

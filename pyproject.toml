@@ -97,6 +97,7 @@ select = ["E", "F", "W", "UP", "N", "SIM"]  # I 由独立 isort 负责
 "**/sync/scheduler.py" = ["E501"]
 "**/connectors/db_connector.py" = ["E501", "N801"]
 "**/simulation/data.py" = ["E501"]
+"**/simulation/report.py" = ["E501"]
 "**/runner.py" = ["E501"]
 "**/core/models/base.py" = ["N803"]
 "**/supplier/run.py" = ["N806"]

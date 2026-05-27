@@ -7,29 +7,16 @@
   - 结构化报告 + 配置快照（可复现）
 
 使用方式：
-
-    # 配置驱动运行
     from risk_engine.simulation.pipeline import run
     from risk_engine.simulation.config.zhejiang_v1 import Zhejiang_v1
 
     result = run(Zhejiang_v1)
-
-    # 继承历史快照重新跑
-    from risk_engine.simulation.snapshot import import_previous
-    from risk_engine.simulation.config.presets import Jiangxi_v1
-
-    prev = import_previous("zhejiang", "v1", "2026-05-27_1500")
-    new_config = Jiangxi_v1.clone(**{"province": "浙江省", ...})
-    result = run(new_config)
 """
 
-from risk_engine.simulation.classifier import classify, list_branches
-from risk_engine.simulation.config.presets import Jiangxi_v1, SimulationConfig
-from risk_engine.simulation.estimator import estimate_all, estimate_branch
 from risk_engine.simulation.pipeline import run, run_from_config_file
 from risk_engine.simulation.snapshot import (
-    import_previous,
-    list_snapshots,
-    load_snapshot,
-    save_snapshot,
+    save_snapshot, load_snapshot, list_snapshots, import_previous,
 )
+from risk_engine.simulation.config.presets import Jiangxi_v1, SimulationConfig
+from risk_engine.simulation.estimator import estimate_all, estimate_branch
+from risk_engine.model_registry import list_models
