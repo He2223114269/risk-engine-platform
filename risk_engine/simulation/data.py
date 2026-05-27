@@ -213,10 +213,15 @@ def fetch(mode_config: SimulationConfig) -> pd.DataFrame:
         right_on=["user_name", "id_card"],
         how="left",
     )
+    # LXF 转 float
+    data["lxf"] = pd.to_numeric(data["lxf"], errors="coerce")
 
     conn.close()
 
     # ── 6. 特征工程 ──
+    # 关键列转数值
+    data["is_over_due"] = pd.to_numeric(data["is_over_due"], errors="coerce").fillna(0).astype(int)
+    data["lxf"] = pd.to_numeric(data["lxf"], errors="coerce")
     data = _engineering(data, mode_config)
 
     return data
@@ -250,6 +255,8 @@ def _engineering(data: pd.DataFrame, cfg: SimulationConfig) -> pd.DataFrame:
     )
 
     # 金额区间
+    data["order_amt_yuan"] = pd.to_numeric(data["order_amt_yuan"], errors="coerce")
+    data["order_amt"] = pd.to_numeric(data["order_amt"], errors="coerce")
     data["order_amt_yuan"] = np.where(
         data["order_amt_yuan"].isna(),
         data["order_amt"] / 100,
