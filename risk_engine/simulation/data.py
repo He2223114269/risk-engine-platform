@@ -87,19 +87,17 @@ def fetch(mode_config: SimulationConfig) -> pd.DataFrame:
 
     conn = get_data(data_type="risk")
 
-    # ── 1. 取申请表数据 ──
+    # ── 1. 取申请表数据（子查询去重）──
     apply_sql = f"""
-    WITH ranked AS (
+    SELECT * FROM (
         SELECT
-            decrypt(user_name_enc) AS user_name,
-            decrypt(id_number_enc) AS id_number,
+            Decrypt(user_name_enc) AS user_name,
+            Decrypt(id_number_enc) AS id_number,
             order_amt,
             store_addr_province,
-            decrypt(mobile_no_enc) AS mobile_no,
+            Decrypt(mobile_no_enc) AS mobile_no,
             pack_name,
             goods_type,
-            gender,
-            age,
             case when mobile_no = bank_mobile_no then 1 else 0 end AS is_same_telelphon,
             round(return_red_envelope / pack_price, 4) AS subsidy_rate,
             case when nation = '汉' then '汉族' when nation is not null then '非汉族' else '未知' end AS nation,
@@ -113,8 +111,7 @@ def fetch(mode_config: SimulationConfig) -> pd.DataFrame:
             ) AS rt
         FROM ods.ods_ts_credit_yzf_order_grant_apply
         WHERE custtype = '00' AND store_addr_province = '{province}'
-    )
-    SELECT * FROM ranked WHERE rt = 1
+    ) t WHERE rt = 1
     """
     apply_data = conn.get_data(apply_sql)
 
@@ -148,8 +145,8 @@ def fetch(mode_config: SimulationConfig) -> pd.DataFrame:
     """
     dws_data = conn.get_data(dws_sql)
 
-    # ── 3. 取灵犀分 ──
-    lxf_sql = """
+    # ── 3. 取灵犀分（只拉目标省份）──
+    lxf_sql = f"""
     WITH computed_lxf AS (
         SELECT
             Decrypt(user_name_enc) AS user_name,
@@ -158,6 +155,7 @@ def fetch(mode_config: SimulationConfig) -> pd.DataFrame:
             second_risk_result,
             lxf
         FROM ods.ods_ts_order_white_list_control
+        WHERE type = '淘顺实时授信' AND province = '{province}'
     ),
     ranked_data AS (
         SELECT
