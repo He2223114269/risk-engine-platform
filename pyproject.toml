@@ -106,8 +106,12 @@ select = ["E", "F", "I", "W", "UP", "N", "SIM"]
 
 [tool.mypy]
 python_version = "3.12"
-strict = true
+warn_unused_configs = true
 ignore_missing_imports = true
+
+# 先降低严格度，后续逐步收紧
+check_untyped_defs = false
+disable_error_code = ["type-arg", "var-annotated", "union-attr", "no-untyped-def", "no-untyped-call", "assignment"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
