@@ -14,9 +14,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from risk_engine.simulation import classifier, estimator, snapshot
+from risk_engine.simulation import classifier
 from risk_engine.simulation import data as sim_data
+from risk_engine.simulation import estimator
 from risk_engine.simulation import report as sim_report
+from risk_engine.simulation import snapshot
 from risk_engine.simulation.config.presets import SimulationConfig
 
 
