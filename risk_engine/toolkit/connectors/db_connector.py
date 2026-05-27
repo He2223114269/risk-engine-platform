@@ -51,6 +51,7 @@ __all__ = ["get_data"]
 
 # ===== 加载配置（优先明文文件，其次模板文件+环境变量） =====
 
+
 def _load_config(data_type: str) -> dict:
     """
     加载指定 data_type 的数据库配置
@@ -64,6 +65,7 @@ def _load_config(data_type: str) -> dict:
     # 1. 尝试加载明文配置
     try:
         from risk_engine.config import db_config_secret
+
         config = db_config_secret.DB_CONFIG.get(data_type)
         if config:
             return dict(config)
@@ -73,6 +75,7 @@ def _load_config(data_type: str) -> dict:
     # 2. 尝试加载模板配置
     try:
         from risk_engine.config import db_config
+
         config = db_config.DB_CONFIG.get(data_type)
     except (ImportError, AttributeError):
         pass
@@ -102,6 +105,7 @@ def _load_config(data_type: str) -> dict:
 
 
 # ===== 主类 =====
+
 
 class get_data:
     """
@@ -318,13 +322,19 @@ class get_data:
 
         cols_list = list(data.columns)
         return (
-            pd.DataFrame(success, columns=cols_list) if success else pd.DataFrame(columns=cols_list),
+            (
+                pd.DataFrame(success, columns=cols_list)
+                if success
+                else pd.DataFrame(columns=cols_list)
+            ),
             pd.DataFrame(failed, columns=cols_list) if failed else pd.DataFrame(columns=cols_list),
         )
 
     # ─── 更新 / 删除 ────────────────────────────────────────────
 
-    def update_sql(self, table_name: str, condition_data: pd.DataFrame, value_data: pd.DataFrame) -> None:
+    def update_sql(
+        self, table_name: str, condition_data: pd.DataFrame, value_data: pd.DataFrame
+    ) -> None:
         """批量更新数据"""
         if condition_data.shape[0] != value_data.shape[0]:
             raise ValueError("condition_data 和 value_data 行数不一致")
@@ -344,17 +354,21 @@ class get_data:
         finally:
             cursor.close()
 
-    def for_update_sql(self, table_name: str, condition_data: pd.DataFrame, value_data: pd.DataFrame) -> None:
+    def for_update_sql(
+        self, table_name: str, condition_data: pd.DataFrame, value_data: pd.DataFrame
+    ) -> None:
         """逐条更新（慢但可控）"""
         total = pd.concat([condition_data, value_data], axis=1)
         cursor = self.conn.cursor()
         try:
             for _, row in total.iterrows():
                 set_clause = ",".join([f'{c}="{row[c]}"' for c in value_data.columns])
-                where_clause = " AND ".join([
-                    f'{c}={int(row[c]) if c == "id" else chr(34) + str(row[c]) + chr(34)}'
-                    for c in condition_data.columns
-                ])
+                where_clause = " AND ".join(
+                    [
+                        f'{c}={int(row[c]) if c == "id" else chr(34) + str(row[c]) + chr(34)}'
+                        for c in condition_data.columns
+                    ]
+                )
                 cursor.execute(f"UPDATE {table_name} SET {set_clause} WHERE {where_clause}")
             self.conn.commit()
         except Exception:

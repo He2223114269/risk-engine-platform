@@ -1,4 +1,5 @@
 """套餐评级 - 评分逻辑"""
+
 from __future__ import annotations
 import pandas as pd
 from risk_engine.rating.base import map_score_inverse, map_score_linear, map_score_by_percentile
@@ -19,7 +20,8 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
             map_score_inverse(r["num_overdue_rate"], best=0.0, worst=0.10)
             if r["num_overdue_rate"] > 0 or r["data_sufficient"]
             else 50.0
-        ), axis=1
+        ),
+        axis=1,
     )
 
     # 2. 退订率 20%
@@ -29,7 +31,9 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
 
     # 3. 客群匹配度 15%
     result["old_customer_rate"] = result.apply(
-        lambda r: r["old_customer_count"] / max(r["old_customer_count"] + r["new_customer_count"], 1), axis=1
+        lambda r: r["old_customer_count"]
+        / max(r["old_customer_count"] + r["new_customer_count"], 1),
+        axis=1,
     )
     result["score_customer"] = result["old_customer_rate"].apply(lambda x: 30 + x * 70)
 
@@ -38,8 +42,10 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
 
     # 5. 风控通过率 10%
     pr_avg = result.groupby("province")["risk_pass_rate"].transform("mean")
-    result["score_passrate"] = (result["risk_pass_rate"] - pr_avg).abs().apply(
-        lambda x: map_score_inverse(x, best=0.0, worst=0.15)
+    result["score_passrate"] = (
+        (result["risk_pass_rate"] - pr_avg)
+        .abs()
+        .apply(lambda x: map_score_inverse(x, best=0.0, worst=0.15))
     )
 
     # 6. 稳定性 5%

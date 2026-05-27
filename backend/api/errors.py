@@ -25,8 +25,9 @@ __all__ = [
 @dataclass
 class AppError(Exception):
     """应用级错误基类"""
-    code: str          # 错误码
-    message: str       # 错误描述
+
+    code: str  # 错误码
+    message: str  # 错误描述
     status_code: int = 500  # HTTP 状态码
 
 

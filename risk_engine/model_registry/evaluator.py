@@ -22,13 +22,14 @@ __all__ = ["ModelEvaluator", "EvaluationReport"]
 @dataclass
 class EvaluationReport:
     """模型评估报告"""
+
     model_version: str
-    psi: float                  # 群体稳定性指标
-    ks: float                   # KS 值
-    auc: float                  # AUC
-    gini: float                 # Gini 系数
-    confusion_matrix: dict      # 混淆矩阵
-    score_distribution: dict    # 分数分布
+    psi: float  # 群体稳定性指标
+    ks: float  # KS 值
+    auc: float  # AUC
+    gini: float  # Gini 系数
+    confusion_matrix: dict  # 混淆矩阵
+    score_distribution: dict  # 分数分布
 
 
 class ModelEvaluator:
@@ -38,9 +39,7 @@ class ModelEvaluator:
         """执行模型评估，返回完整评估报告"""
         raise NotImplementedError
 
-    def calculate_psi(
-        self, expected: list[float], actual: list[float], bins: int = 10
-    ) -> float:
+    def calculate_psi(self, expected: list[float], actual: list[float], bins: int = 10) -> float:
         """计算 PSI — 监控模型分数的分布漂移"""
         raise NotImplementedError
 

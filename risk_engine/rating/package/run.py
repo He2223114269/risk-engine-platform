@@ -1,4 +1,5 @@
 """套餐评级 - 一键运行"""
+
 from __future__ import annotations
 import pandas as pd
 import numpy as np
@@ -41,10 +42,19 @@ def run_package_rating(
 
 
 def _write(df: pd.DataFrame, data_date: str):
-    cols = ["pack_name", "province", "total_transaction_count", "num_overdue_rate",
-            "unsubscribe_rate", "risk_pass_rate", "active_months",
-            "old_customer_count", "new_customer_count",
-            "compliance_score", "package_rating"]
+    cols = [
+        "pack_name",
+        "province",
+        "total_transaction_count",
+        "num_overdue_rate",
+        "unsubscribe_rate",
+        "risk_pass_rate",
+        "active_months",
+        "old_customer_count",
+        "new_customer_count",
+        "compliance_score",
+        "package_rating",
+    ]
     existing = [c for c in cols if c in df.columns]
     rec = df[existing].copy()
     rec["data_date"] = data_date
@@ -60,15 +70,18 @@ def _write(df: pd.DataFrame, data_date: str):
 
     ok, err = 0, 0
     for _, row in rec.iterrows():
-        vals = [None if pd.isna(v) or (isinstance(v, float) and (np.isnan(v) or np.isinf(v))) else v for v in row]
+        vals = [
+            None if pd.isna(v) or (isinstance(v, float) and (np.isnan(v) or np.isinf(v))) else v
+            for v in row
+        ]
         try:
             cursor.execute(sql, tuple(vals))
             ok += 1
         except Exception as e:
             err += 1
             if err <= 3:
-                print(f'    ⚠️ 失败 [{row.iloc[0]}]: {e}')
+                print(f"    ⚠️ 失败 [{row.iloc[0]}]: {e}")
     conn.conn.commit()
     cursor.close()
     conn.close()
-    print(f'    → 写入: {ok} 成功, {err} 失败')
+    print(f"    → 写入: {ok} 成功, {err} 失败")

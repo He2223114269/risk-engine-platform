@@ -25,8 +25,10 @@ SyncBase = declarative_base()
 #  ODS 层 — 原始数据
 # ════════════════════════════════════════════════════════════════
 
+
 class OdV3OrderStore(SyncBase):
     """门店等级表"""
+
     __tablename__ = "ods_ts_v3_order_store"
     __table_args__ = {"schema": "ods"}
 
@@ -45,6 +47,7 @@ class OdV3OrderStore(SyncBase):
 
 class OdOrderWhiteListControl(SyncBase):
     """风控结果表"""
+
     __tablename__ = "ods_ts_order_white_list_control"
     __table_args__ = {"schema": "ods"}
 
@@ -68,6 +71,7 @@ class OdOrderWhiteListControl(SyncBase):
 
 class OdGrantApply(SyncBase):
     """授信申请表"""
+
     __tablename__ = "ods_ts_credit_yzf_order_grant_apply"
     __table_args__ = {"schema": "ods"}
 
@@ -90,6 +94,7 @@ class OdGrantApply(SyncBase):
 
 class OdOrderComplete(SyncBase):
     """订单竣工表"""
+
     __tablename__ = "ods_ts_credit_yzf_order_info_complete"
     __table_args__ = {"schema": "ods"}
 
@@ -110,6 +115,7 @@ class OdOrderComplete(SyncBase):
 
 class OdRepayment(SyncBase):
     """还款明细表"""
+
     __tablename__ = "ods_ts_credit_yzf_order_repayment"
     __table_args__ = {"schema": "ods"}
 
@@ -131,8 +137,10 @@ class OdRepayment(SyncBase):
 #  DWS 层 — 汇总宽表
 # ════════════════════════════════════════════════════════════════
 
+
 class DwsOrderComplete(SyncBase):
     """订单+还款汇总宽表"""
+
     __tablename__ = "dws_credit_yzf_order_complete"
     __table_args__ = {"schema": "dws"}
 

@@ -18,7 +18,9 @@ from typing import Optional
 
 from risk_engine.toolkit.connectors import get_data
 from risk_engine.rating.store.extract import (
-    extract_all, extract_channel_level, extract_supplier_rating,
+    extract_all,
+    extract_channel_level,
+    extract_supplier_rating,
 )
 from risk_engine.rating.store.score import score_all
 from risk_engine.rating.store.rate import assign_ratings
@@ -83,18 +85,39 @@ def run_store_rating(
 
 def _write_to_db(df: pd.DataFrame, data_date: str):
     COLUMNS = [
-        "store_id", "store_name", "province", "city", "supplier_code", "supplier_name",
-        "business_start_date", "last_active_date",
-        "business_duration_days", "active_months", "recent_inactive_days",
-        "total_transaction_count", "total_transaction_amount",
-        "monthly_avg_amount", "last_month_amount", "amount_growth_rate",
-        "new_customer_count", "old_customer_count",
-        "local_network_count", "external_network_count",
-        "single_card_count", "fusion_count",
-        "num_overdue_rate", "overdue_order_count", "matured_order_count", "unsubscribe_rate",
-        "risk_pass_rate", "risk_pass_rate_deviation",
-        "channel_level", "supplier_rating", "penalty_count",
-        "compliance_score", "store_rating",
+        "store_id",
+        "store_name",
+        "province",
+        "city",
+        "supplier_code",
+        "supplier_name",
+        "business_start_date",
+        "last_active_date",
+        "business_duration_days",
+        "active_months",
+        "recent_inactive_days",
+        "total_transaction_count",
+        "total_transaction_amount",
+        "monthly_avg_amount",
+        "last_month_amount",
+        "amount_growth_rate",
+        "new_customer_count",
+        "old_customer_count",
+        "local_network_count",
+        "external_network_count",
+        "single_card_count",
+        "fusion_count",
+        "num_overdue_rate",
+        "overdue_order_count",
+        "matured_order_count",
+        "unsubscribe_rate",
+        "risk_pass_rate",
+        "risk_pass_rate_deviation",
+        "channel_level",
+        "supplier_rating",
+        "penalty_count",
+        "compliance_score",
+        "store_rating",
     ]
     existing = [c for c in COLUMNS if c in df.columns]
     records = df[existing].copy()
@@ -120,7 +143,7 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
                 vals.append(None)
             else:
                 try:
-                    vals.append(v.item() if hasattr(v, 'item') else v)
+                    vals.append(v.item() if hasattr(v, "item") else v)
                 except:
                     vals.append(v)
         try:
@@ -129,8 +152,8 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
         except Exception as e:
             errors += 1
             if errors <= 3:
-                print(f'    ⚠️ 写入失败 [{row.iloc[0]}]: {e}')
+                print(f"    ⚠️ 写入失败 [{row.iloc[0]}]: {e}")
     conn.conn.commit()
     cursor.close()
     conn.close()
-    print(f'    → 写入: {success} 成功, {errors} 失败')
+    print(f"    → 写入: {success} 成功, {errors} 失败")

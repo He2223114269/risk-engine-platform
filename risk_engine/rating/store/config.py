@@ -21,6 +21,7 @@ from typing import Dict, List
 @dataclass
 class DimensionWeight:
     """单个维度的权重配置"""
+
     name: str
     weight: float
     fields: List[str]
@@ -63,8 +64,8 @@ DIMENSION_WEIGHTS: Dict[str, DimensionWeight] = {
 # ── 评级阈值（按排名百分比） ──
 
 RATING_THRESHOLDS = {
-    "A": 0.01,    # 前 1%
-    "B": 0.20,    # 1% ~ 20%
+    "A": 0.01,  # 前 1%
+    "B": 0.20,  # 1% ~ 20%
     # 其余为 C
 }
 

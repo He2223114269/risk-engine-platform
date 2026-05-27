@@ -15,7 +15,11 @@ from typing import Optional
 
 from risk_engine.toolkit.connectors import get_data
 from risk_engine.toolkit.sync.ddl_registry import (
-    ALL_TABLES, get_table, get_starrocks_mapping, get_tables_by_schema, DDLEntry
+    ALL_TABLES,
+    get_table,
+    get_starrocks_mapping,
+    get_tables_by_schema,
+    DDLEntry,
 )
 from risk_engine.toolkit.sync.sync_tracker import start_sync, finish_sync
 
@@ -215,7 +219,7 @@ def _write_to_local(tbl: DDLEntry, df: pd.DataFrame):
     written = 0
 
     for start in range(0, total, tbl.batch_size):
-        batch = df.iloc[start:start + tbl.batch_size]
+        batch = df.iloc[start : start + tbl.batch_size]
         values = []
         for _, row in batch.iterrows():
             vals = []
@@ -225,7 +229,7 @@ def _write_to_local(tbl: DDLEntry, df: pd.DataFrame):
                 elif isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
                     vals.append(None)
                 else:
-                    vals.append(v.item() if hasattr(v, 'item') else v)
+                    vals.append(v.item() if hasattr(v, "item") else v)
             values.append(tuple(vals))
 
         try:

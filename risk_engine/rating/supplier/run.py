@@ -67,12 +67,20 @@ def run_supplier_rating(
         df["high_quality_store_count"] = df["high_quality_store_count"].fillna(0)
         df["regulated_store_count"] = df["regulated_store_count"].fillna(0)
         df["store_quality_rate"] = df.apply(
-            lambda r: r["high_quality_store_count"] / r["store_count_actual"]
-            if r["store_count_actual"] > 0 else 0, axis=1,
+            lambda r: (
+                r["high_quality_store_count"] / r["store_count_actual"]
+                if r["store_count_actual"] > 0
+                else 0
+            ),
+            axis=1,
         )
         df["regulated_store_rate"] = df.apply(
-            lambda r: r["regulated_store_count"] / r["store_count_actual"]
-            if r["store_count_actual"] > 0 else 0, axis=1,
+            lambda r: (
+                r["regulated_store_count"] / r["store_count_actual"]
+                if r["store_count_actual"] > 0
+                else 0
+            ),
+            axis=1,
         )
     else:
         df["store_quality_rate"] = 0
@@ -146,13 +154,18 @@ def _merge_qichacha(df: pd.DataFrame, data_date: str):
         qcc_df["_name"] = qcc_df["supplier_name"].str.replace("（", "(").str.replace("）", ")")
 
         # 左连接企查查数据
-        merged = df_name.merge(
-            qcc_df, on="_name", how="left"
-        )
+        merged = df_name.merge(qcc_df, on="_name", how="left")
 
         # 把企查查字段合并回 df
-        qcc_fields = ["register_status", "enterprise_type", "registered_capital",
-                      "paid_capital", "credit_code", "enterprise_scale", "insured_count"]
+        qcc_fields = [
+            "register_status",
+            "enterprise_type",
+            "registered_capital",
+            "paid_capital",
+            "credit_code",
+            "enterprise_scale",
+            "insured_count",
+        ]
         for col in qcc_fields:
             df[col] = merged[col].values
 
@@ -169,39 +182,67 @@ def _merge_qichacha(df: pd.DataFrame, data_date: str):
 def _set_qcc_fields(df, has_data: bool):
     """设置企查查字段为 None"""
     df["has_qichacha"] = has_data
-    for col in ["register_status", "enterprise_type", "registered_capital",
-                "paid_capital", "credit_code", "enterprise_scale", "insured_count"]:
+    for col in [
+        "register_status",
+        "enterprise_type",
+        "registered_capital",
+        "paid_capital",
+        "credit_code",
+        "enterprise_scale",
+        "insured_count",
+    ]:
         df[col] = None
 
 
 def _write_to_db(df: pd.DataFrame, data_date: str):
     """将评分和评级结果写入本地 MySQL。"""
     COLUMNS = [
-        "supplier_code", "supplier_name", "province",
-        "business_start_date", "last_active_date",
-        "business_duration_days", "active_months", "recent_inactive_days",
-        "store_count", "staff_count",
-        "high_quality_store_count", "regulated_store_count",
-        "store_quality_rate", "regulated_store_rate",
+        "supplier_code",
+        "supplier_name",
+        "province",
+        "business_start_date",
+        "last_active_date",
+        "business_duration_days",
+        "active_months",
+        "recent_inactive_days",
+        "store_count",
+        "staff_count",
+        "high_quality_store_count",
+        "regulated_store_count",
+        "store_quality_rate",
+        "regulated_store_rate",
         "yzf_rating",
-        "total_transaction_amount", "total_transaction_count",
-        "monthly_avg_amount", "last_month_amount", "amount_growth_rate",
+        "total_transaction_amount",
+        "total_transaction_count",
+        "monthly_avg_amount",
+        "last_month_amount",
+        "amount_growth_rate",
         "num_overdue_rate",
         "overdue_order_count",
-        "new_customer_count", "old_customer_count",
-        "local_network_count", "external_network_count",
-        "single_card_count", "fusion_count",
+        "new_customer_count",
+        "old_customer_count",
+        "local_network_count",
+        "external_network_count",
+        "single_card_count",
+        "fusion_count",
         "unsubscribe_rate",
-        "risk_pass_rate", "risk_pass_rate_deviation",
-        "compliance_score", "supplier_rating",
+        "risk_pass_rate",
+        "risk_pass_rate_deviation",
+        "compliance_score",
+        "supplier_rating",
     ]
 
     GENERATED_COLUMNS = {
-        "store_quality_rate", "regulated_store_rate",
-        "avg_store_amount", "avg_staff_amount",
-        "new_customer_rate", "old_customer_rate",
-        "local_network_rate", "external_network_rate",
-        "single_card_rate", "fusion_rate",
+        "store_quality_rate",
+        "regulated_store_rate",
+        "avg_store_amount",
+        "avg_staff_amount",
+        "new_customer_rate",
+        "old_customer_rate",
+        "local_network_rate",
+        "external_network_rate",
+        "single_card_rate",
+        "fusion_rate",
     }
 
     existing = [c for c in COLUMNS if c in df.columns and c not in GENERATED_COLUMNS]
@@ -221,7 +262,7 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
     success, failed = 0, 0
     for _, row in records.iterrows():
         # 跳过空 supplier_id
-        sid = row.get('supplier_id') or row.get('supplier_code') or ''
+        sid = row.get("supplier_id") or row.get("supplier_code") or ""
         if not str(sid).strip():
             failed += 1
             continue
@@ -241,6 +282,6 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
 
     conn.conn.commit()
     if failed > 0:
-        print(f'    → 写入: {success} 成功, {failed} 失败（已跳过）')
+        print(f"    → 写入: {success} 成功, {failed} 失败（已跳过）")
     cursor.close()
     conn.close()

@@ -81,8 +81,9 @@ def run_sync(
     return results
 
 
-def _sync_table(tbl: SyncTableConfig, sync_date: str, mode: str,
-               lookback_months: int, write_to_db: bool) -> int:
+def _sync_table(
+    tbl: SyncTableConfig, sync_date: str, mode: str, lookback_months: int, write_to_db: bool
+) -> int:
     """同步单张表。"""
     from risk_engine.toolkit.sync.sync_tracker import get_last_sync
 
@@ -169,7 +170,7 @@ def _write_to_mysql(tbl: SyncTableConfig, df: pd.DataFrame, sync_date: str):
     written = 0
 
     for start in range(0, total, tbl.batch_size):
-        batch = df.iloc[start:start + tbl.batch_size]
+        batch = df.iloc[start : start + tbl.batch_size]
         values_list = []
         for _, row in batch.iterrows():
             vals = []
@@ -179,7 +180,7 @@ def _write_to_mysql(tbl: SyncTableConfig, df: pd.DataFrame, sync_date: str):
                 elif isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
                     vals.append(None)
                 else:
-                    vals.append(v.item() if hasattr(v, 'item') else v)
+                    vals.append(v.item() if hasattr(v, "item") else v)
             values_list.append(tuple(vals))
 
         try:
@@ -217,13 +218,9 @@ def _ensure_local_table(conn, tbl: SyncTableConfig):
     sr = get_data(data_type="risk")
     try:
         # 通过 LIMIT 0 获取字段
-        sample = sr.get_data(
-            f"SELECT * FROM {tbl.starrocks_table} WHERE {tbl.filter_sql} LIMIT 0"
-        )
+        sample = sr.get_data(f"SELECT * FROM {tbl.starrocks_table} WHERE {tbl.filter_sql} LIMIT 0")
         if sample.empty:
-            sample = sr.get_data(
-                f"SELECT * FROM {tbl.starrocks_table} LIMIT 0"
-            )
+            sample = sr.get_data(f"SELECT * FROM {tbl.starrocks_table} LIMIT 0")
 
         cols = sample.columns
         col_defs = []

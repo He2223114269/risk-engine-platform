@@ -24,6 +24,7 @@ from typing import Dict, List, Set
 @dataclass
 class DimensionWeight:
     """单个维度的权重配置"""
+
     name: str
     weight: float
     fields: List[str]
@@ -45,15 +46,15 @@ BASE_WEIGHTS: Dict[str, float] = {
 # ── 根据数据有无动态调整的维度 ──
 # 有数据时用完整权重，无数据时权重归零并重新分配
 CONDITIONAL_DIMENSIONS: Dict[str, Set[str]] = {
-    "yzf": {"翼支付评级"},      # 依赖翼支付评价表
+    "yzf": {"翼支付评级"},  # 依赖翼支付评价表
     "qichacha": {"企业正规度", "资本实力"},  # 依赖企查查
 }
 
 # ── 评级阈值 ──
 
 RATING_THRESHOLDS = {
-    "A": 0.01,    # 每省前 1%
-    "B": 0.10,    # 每省前 1% ~ 10%
+    "A": 0.01,  # 每省前 1%
+    "B": 0.10,  # 每省前 1% ~ 10%
 }
 
 # ── 翼支付评级映射分数 ──
@@ -110,10 +111,7 @@ def get_effective_weights(
         return available_weights
 
     # 缺失的权重按比例分配给可用维度
-    return {
-        d: w + w * missing_weight / available_total
-        for d, w in available_weights.items()
-    }
+    return {d: w + w * missing_weight / available_total for d, w in available_weights.items()}
 
 
 # 启动时校验

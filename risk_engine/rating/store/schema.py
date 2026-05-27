@@ -14,6 +14,7 @@ from datetime import date, datetime
 @dataclass
 class StoreEvaluation:
     """门店评价数据 — 写入侧契约"""
+
     store_id: str
 
     # ── 基本信息 ──

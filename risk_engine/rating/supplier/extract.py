@@ -182,29 +182,39 @@ def extract_all(
     ).dt.days
 
     df["amount_growth_rate"] = df.apply(
-        lambda r: (r["last_month_amount"] / r["monthly_avg_amount"] - 1)
-        if r["monthly_avg_amount"] > 0 else 0,
+        lambda r: (
+            (r["last_month_amount"] / r["monthly_avg_amount"] - 1)
+            if r["monthly_avg_amount"] > 0
+            else 0
+        ),
         axis=1,
     )
 
     # 逾期率 = 逾期订单数 / 已到还款期的订单数
     df["num_overdue_rate"] = df.apply(
-        lambda r: r["overdue_order_count"] / r["matured_order_count"]
-        if r["matured_order_count"] > 0 else 0,
+        lambda r: (
+            r["overdue_order_count"] / r["matured_order_count"]
+            if r["matured_order_count"] > 0
+            else 0
+        ),
         axis=1,
     )
 
     # 风控通过率
     df["risk_pass_rate"] = df.apply(
-        lambda r: r["risk_passed_count"] / r["risk_eligible_count"]
-        if r["risk_eligible_count"] > 0 else 0,
+        lambda r: (
+            r["risk_passed_count"] / r["risk_eligible_count"] if r["risk_eligible_count"] > 0 else 0
+        ),
         axis=1,
     )
 
     # 退订率
     df["unsubscribe_rate"] = df.apply(
-        lambda r: r["unsubscribe_count"] / r["total_transaction_count"]
-        if r["total_transaction_count"] > 0 else 0,
+        lambda r: (
+            r["unsubscribe_count"] / r["total_transaction_count"]
+            if r["total_transaction_count"] > 0
+            else 0
+        ),
         axis=1,
     )
 
@@ -279,24 +289,30 @@ def extract_store_quality(
         return pd.DataFrame()
 
     store_levels = pd.concat(all_store_data, ignore_index=True)
-    store_levels = store_levels[["store_code", "channel_level"]].drop_duplicates(subset=["store_code"], keep="first")
+    store_levels = store_levels[["store_code", "channel_level"]].drop_duplicates(
+        subset=["store_code"], keep="first"
+    )
     store_levels.rename(columns={"store_code": "store_id"}, inplace=True)
 
     # 关联到代理商
     merged = mapping.merge(store_levels, on="store_id", how="left")
 
     # 汇总每个代理商的门店质量
-    result = merged.groupby("supplier_code").agg(
-        store_count_actual=("store_id", "nunique"),
-        high_quality_store_count=(
-            "channel_level",
-            lambda x: (x == "优质渠道").sum() if x.notna().any() else 0,
-        ),
-        regulated_store_count=(
-            "channel_level",
-            lambda x: x.isin(["监控渠道", "拉黑渠道"]).sum() if x.notna().any() else 0,
-        ),
-    ).reset_index()
+    result = (
+        merged.groupby("supplier_code")
+        .agg(
+            store_count_actual=("store_id", "nunique"),
+            high_quality_store_count=(
+                "channel_level",
+                lambda x: (x == "优质渠道").sum() if x.notna().any() else 0,
+            ),
+            regulated_store_count=(
+                "channel_level",
+                lambda x: x.isin(["监控渠道", "拉黑渠道"]).sum() if x.notna().any() else 0,
+            ),
+        )
+        .reset_index()
+    )
 
     return result
 
@@ -344,7 +360,7 @@ def extract_staff_count(
 
 def extract_yzf_rating(
     excel_path: str = None,
-    conn = None,
+    conn=None,
 ) -> pd.DataFrame:
     """
     导入翼支付评级。
@@ -355,8 +371,7 @@ def extract_yzf_rating(
 
     try:
         df = conn.get_data(
-            "SELECT supplier_id AS supplier_code, level AS yzf_rating "
-            "FROM yzf_supplier_rating"
+            "SELECT supplier_id AS supplier_code, level AS yzf_rating " "FROM yzf_supplier_rating"
         )
     except Exception:
         # 如果本地库没有该表，返回空

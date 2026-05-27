@@ -14,7 +14,6 @@ from typing import Optional
 
 from risk_engine.toolkit.connectors import get_data
 
-
 _DWS_TABLE = "dws.dws_credit_yzf_order_complete"
 _SOURCE_FILTER = "source_business_type = '淘顺实时授信'"
 _APPLY_TABLE = "ods.ods_ts_credit_yzf_order_grant_apply"
@@ -106,30 +105,40 @@ def extract_all(
 
     # 衍生计算
     ref_date = datetime.strptime(end_date, "%Y-%m-%d")
-    df["business_duration_days"] = (
-        ref_date - pd.to_datetime(df["business_start_date"])
-    ).dt.days
-    df["recent_inactive_days"] = (
-        ref_date - pd.to_datetime(df["last_active_date"])
-    ).dt.days
+    df["business_duration_days"] = (ref_date - pd.to_datetime(df["business_start_date"])).dt.days
+    df["recent_inactive_days"] = (ref_date - pd.to_datetime(df["last_active_date"])).dt.days
     df["amount_growth_rate"] = df.apply(
-        lambda r: (r["last_month_amount"] / r["monthly_avg_amount"] - 1)
-        if r["monthly_avg_amount"] > 0 else 0, axis=1,
+        lambda r: (
+            (r["last_month_amount"] / r["monthly_avg_amount"] - 1)
+            if r["monthly_avg_amount"] > 0
+            else 0
+        ),
+        axis=1,
     )
     # 足额率
     df["num_overdue_rate"] = df.apply(
-        lambda r: r["overdue_order_count"] / r["matured_order_count"]
-        if r["matured_order_count"] > 0 else 0, axis=1,
+        lambda r: (
+            r["overdue_order_count"] / r["matured_order_count"]
+            if r["matured_order_count"] > 0
+            else 0
+        ),
+        axis=1,
     )
     # 退订率
     df["unsubscribe_rate"] = df.apply(
-        lambda r: r["unsubscribe_count"] / r["total_transaction_count"]
-        if r["total_transaction_count"] > 0 else 0, axis=1,
+        lambda r: (
+            r["unsubscribe_count"] / r["total_transaction_count"]
+            if r["total_transaction_count"] > 0
+            else 0
+        ),
+        axis=1,
     )
     # 风控通过率
     df["risk_pass_rate"] = df.apply(
-        lambda r: r["risk_passed_count"] / r["risk_eligible_count"]
-        if r["risk_eligible_count"] > 0 else 0, axis=1,
+        lambda r: (
+            r["risk_passed_count"] / r["risk_eligible_count"] if r["risk_eligible_count"] > 0 else 0
+        ),
+        axis=1,
     )
 
     return df
@@ -146,7 +155,7 @@ def extract_channel_level(
     batch_size = 500
     results = []
     for i in range(0, len(store_ids), batch_size):
-        batch = store_ids[i:i+batch_size]
+        batch = store_ids[i : i + batch_size]
         ids_str = ",".join([f"'{s}'" for s in batch])
         df = conn.get_data(f"""
             SELECT store_code, channel_level, update_time

@@ -12,15 +12,16 @@ from typing import Optional
 @dataclass
 class SyncTableConfig:
     """单张表的同步配置"""
-    name: str                     # 本地表名
-    starrocks_table: str          # StarRocks 原始表名
-    description: str              # 说明
-    row_estimate: int             # 行数估算
-    filter_sql: str               # 筛选条件（淘顺实时授信）
-    batch_size: int = 10000       # 分批写入大小
-    columns: list = None          # 需要同步的字段列表（None=全部）
-    index_cols: list = None       # 本地主键/索引
-    incremental_key: str = None   # 增量同步的时间字段
+
+    name: str  # 本地表名
+    starrocks_table: str  # StarRocks 原始表名
+    description: str  # 说明
+    row_estimate: int  # 行数估算
+    filter_sql: str  # 筛选条件（淘顺实时授信）
+    batch_size: int = 10000  # 分批写入大小
+    columns: list = None  # 需要同步的字段列表（None=全部）
+    index_cols: list = None  # 本地主键/索引
+    incremental_key: str = None  # 增量同步的时间字段
 
 
 SYNC_TABLES = [

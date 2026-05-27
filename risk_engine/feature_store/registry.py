@@ -27,13 +27,14 @@ __all__ = [
 @dataclass(frozen=True)
 class FeatureDefinition:
     """特征定义 — 不可变对象，注册后禁止修改"""
-    name: str                                    # 特征名称（全局唯一）
-    feature_type: str                            # numeric / categorical / text
-    source_table: str                            # 来源表
-    compute_logic: str                           # 计算逻辑描述
-    version: str = "v1"                          # 特征版本
-    description: str = ""                        # 特征说明
-    tags: list[str] = field(default_factory=list) # 标签
+
+    name: str  # 特征名称（全局唯一）
+    feature_type: str  # numeric / categorical / text
+    source_table: str  # 来源表
+    compute_logic: str  # 计算逻辑描述
+    version: str = "v1"  # 特征版本
+    description: str = ""  # 特征说明
+    tags: list[str] = field(default_factory=list)  # 标签
 
 
 class FeatureRegistry:

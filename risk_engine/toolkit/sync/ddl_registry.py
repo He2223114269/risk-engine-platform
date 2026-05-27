@@ -13,12 +13,13 @@ from typing import Optional, List
 @dataclass
 class DDLEntry:
     """一张表的 DDL 定义"""
-    schema_name: str          # 目标库 (ods/dwd/dws/ads)
-    table_name: str           # 表名
-    ddl: str                  # CREATE TABLE 语句
-    description: str          # 说明
-    row_estimate: int         # 预估行数
-    batch_size: int = 10000   # 每批条数
+
+    schema_name: str  # 目标库 (ods/dwd/dws/ads)
+    table_name: str  # 表名
+    ddl: str  # CREATE TABLE 语句
+    description: str  # 说明
+    row_estimate: int  # 预估行数
+    batch_size: int = 10000  # 每批条数
 
 
 # ════════════════════════════════════════════════════════════════
@@ -48,7 +49,7 @@ ODS_STORE_TABLE = DDLEntry(
         lh_js_time DATETIME COMMENT '拉黑结束时间',
         adjust_type VARCHAR(32) COMMENT '调整类型'
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='门店等级表'
-    """
+    """,
 )
 
 ODS_RISK_TABLE = DDLEntry(
@@ -87,7 +88,7 @@ ODS_RISK_TABLE = DDLEntry(
         INDEX idx_order_no (order_no),
         INDEX idx_store_id (store_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风控结果表'
-    """
+    """,
 )
 
 ODS_GRANT_APPLY_TABLE = DDLEntry(
@@ -122,7 +123,7 @@ ODS_GRANT_APPLY_TABLE = DDLEntry(
         INDEX idx_store_id (store_id),
         INDEX idx_supplier_code (supplier_code)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='授信申请表'
-    """
+    """,
 )
 
 ODS_ORDER_COMPLETE_TABLE = DDLEntry(
@@ -155,7 +156,7 @@ ODS_ORDER_COMPLETE_TABLE = DDLEntry(
         INDEX idx_ct_user_id (ct_user_id),
         INDEX idx_supplier_code (supplier_code)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单竣工表'
-    """
+    """,
 )
 
 ODS_REPAYMENT_TABLE = DDLEntry(
@@ -182,7 +183,7 @@ ODS_REPAYMENT_TABLE = DDLEntry(
         INDEX idx_order_no (order_no),
         INDEX idx_due_date (due_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='还款明细表'
-    """
+    """,
 )
 
 # ════════════════════════════════════════════════════════════════
@@ -228,7 +229,7 @@ DWS_ORDER_COMPLETE_TABLE = DDLEntry(
         source_business_type VARCHAR(32) COMMENT '业务来源',
         PRIMARY KEY (order_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单+还款汇总宽表'
-    """
+    """,
 )
 
 # ════════════════════════════════════════════════════════════════

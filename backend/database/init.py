@@ -67,6 +67,7 @@ def main():
 
     # 真实建表
     from backend.database import engine
+
     Base.metadata.create_all(bind=engine)
 
     print(f"\n✅ 建表完成")

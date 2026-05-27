@@ -2,9 +2,7 @@
 后端侧 - 套餐评级表 ORM 模型
 """
 
-from sqlalchemy import (
-    Column, String, Integer, Date, VARCHAR, INT, DECIMAL, DATE
-)
+from sqlalchemy import Column, String, Integer, Date, VARCHAR, INT, DECIMAL, DATE
 
 from backend.database.orm.base import Base
 

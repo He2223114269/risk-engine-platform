@@ -1,4 +1,5 @@
 """套餐评级 - 数据提取（简化版）"""
+
 from __future__ import annotations
 import pandas as pd
 from datetime import datetime, timedelta
@@ -12,7 +13,9 @@ _RISK = "ods.ods_ts_order_white_list_control"
 
 def extract_all(end_date=None, lookback_months=12, province=None):
     end_date = end_date or datetime.now().strftime("%Y-%m-%d")
-    start = (datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=lookback_months * 30)).strftime("%Y-%m-%d")
+    start = (
+        datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=lookback_months * 30)
+    ).strftime("%Y-%m-%d")
     prov_f = f"AND a.province = '{province}'" if province else ""
 
     sql = f"""
@@ -52,10 +55,20 @@ def extract_all(end_date=None, lookback_months=12, province=None):
 
     ref = datetime.strptime(end_date, "%Y-%m-%d")
     df["num_overdue_rate"] = df.apply(
-        lambda r: r["overdue_order_count"] / r["matured_order_count"] if r["matured_order_count"] > 0 else 0, axis=1
+        lambda r: (
+            r["overdue_order_count"] / r["matured_order_count"]
+            if r["matured_order_count"] > 0
+            else 0
+        ),
+        axis=1,
     )
     df["unsubscribe_rate"] = df.apply(
-        lambda r: r["unsubscribe_count"] / r["total_transaction_count"] if r["total_transaction_count"] > 0 else 0, axis=1
+        lambda r: (
+            r["unsubscribe_count"] / r["total_transaction_count"]
+            if r["total_transaction_count"] > 0
+            else 0
+        ),
+        axis=1,
     )
     df["risk_pass_rate"] = df.apply(
         lambda r: r["risk_passed"] / r["risk_eligible"] if r["risk_eligible"] > 0 else 0, axis=1

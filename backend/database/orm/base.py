@@ -22,6 +22,7 @@ __all__ = ["Base", "TimestampMixin"]
 
 class Base(DeclarativeBase):
     """SQLAlchemy 声明式基类"""
+
     pass
 
 
@@ -30,6 +31,8 @@ class TimestampMixin:
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False, comment="创建时间")
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, comment="更新时间")
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, comment="更新时间"
+    )
     version = Column(Integer, default=1, nullable=False, comment="数据版本号")
     deleted_at = Column(DateTime, nullable=True, comment="软删除时间")

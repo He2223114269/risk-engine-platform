@@ -69,7 +69,9 @@ def start_sync(table_name: str, sync_date: str) -> bool:
     return True
 
 
-def finish_sync(table_name: str, sync_date: str, row_count: int, status: str = "success", remark: str = ""):
+def finish_sync(
+    table_name: str, sync_date: str, row_count: int, status: str = "success", remark: str = ""
+):
     """记录同步完成。"""
     conn = get_data(data_type="local")
     try:

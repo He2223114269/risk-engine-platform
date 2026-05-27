@@ -58,10 +58,7 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
         lambda r: (
             map_score_inverse(r["num_overdue_rate"], best=0.0, worst=0.10)
             if r["overdue_seen"]
-            else (
-                50.0 if not r["data_sufficient"]
-                else 100.0
-            )
+            else (50.0 if not r["data_sufficient"] else 100.0)
         ),
         axis=1,
     )
@@ -72,17 +69,25 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
     # ══════════════════════════════════════════════════════════
 
     result["old_customer_rate"] = result.apply(
-        lambda r: r["old_customer_count"] / max(r["old_customer_count"] + r["new_customer_count"], 1),
+        lambda r: r["old_customer_count"]
+        / max(r["old_customer_count"] + r["new_customer_count"], 1),
         axis=1,
     )
     result["fusion_rate"] = result.apply(
-        lambda r: r["fusion_count"] / max(r["fusion_count"] + r["single_card_count"], 1)
-        if (r["fusion_count"] + r["single_card_count"]) > 0 else 0.5,
+        lambda r: (
+            r["fusion_count"] / max(r["fusion_count"] + r["single_card_count"], 1)
+            if (r["fusion_count"] + r["single_card_count"]) > 0
+            else 0.5
+        ),
         axis=1,
     )
     result["local_network_rate"] = result.apply(
-        lambda r: r["local_network_count"] / max(r["local_network_count"] + r["external_network_count"], 1)
-        if (r["local_network_count"] + r["external_network_count"]) > 0 else 0.5,
+        lambda r: (
+            r["local_network_count"]
+            / max(r["local_network_count"] + r["external_network_count"], 1)
+            if (r["local_network_count"] + r["external_network_count"]) > 0
+            else 0.5
+        ),
         axis=1,
     )
 
@@ -128,9 +133,7 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
     result["score_recency"] = result["recent_inactive_days"].apply(
         lambda x: map_score_inverse(x, best=0.0, worst=60.0)
     )
-    result["score_stability"] = (
-        result["score_active_months"] * 0.6 + result["score_recency"] * 0.4
-    )
+    result["score_stability"] = result["score_active_months"] * 0.6 + result["score_recency"] * 0.4
 
     # ══════════════════════════════════════════════════════════
     #  6. 通过率异常评分（权重 5%）
@@ -140,8 +143,7 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
     result["risk_pass_rate_deviation"] = result["risk_pass_rate"] - province_avg
 
     result["score_pass_rate"] = result["risk_pass_rate_deviation"].apply(
-        lambda x: 100.0 if x >= 0
-        else map_score_inverse(abs(x), best=0.0, worst=0.20)
+        lambda x: 100.0 if x >= 0 else map_score_inverse(abs(x), best=0.0, worst=0.20)
     )
 
     # ══════════════════════════════════════════════════════════
@@ -188,6 +190,7 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
 
         # 提取数字（"999万元" → 999, "2万元" → 2, "999万美元" → 999*7）
         import re
+
         match = re.search(r"([\d.]+)\s*万元", capital_str)
         try:
             capital = float(match.group(1)) if match else 0

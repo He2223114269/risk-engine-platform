@@ -52,16 +52,14 @@ _settings = BackendSettings()
 engine = create_engine(
     _settings.DATABASE_URL,
     echo=_settings.DATABASE_ECHO,
-    pool_pre_ping=True,          # 连接前检查可用性
-    pool_recycle=3600,           # 一小时后回收连接
-    pool_size=10,                # 连接池大小
-    max_overflow=20,             # 最大溢出连接数
+    pool_pre_ping=True,  # 连接前检查可用性
+    pool_recycle=3600,  # 一小时后回收连接
+    pool_size=10,  # 连接池大小
+    max_overflow=20,  # 最大溢出连接数
 )
 
 # ── 会话工厂 ──
-SessionLocal = scoped_session(
-    sessionmaker(autocommit=False, autoflush=False, bind=engine)
-)
+SessionLocal = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
 
 def init_db():
@@ -110,14 +108,14 @@ def check_db_connection():
 def _import_all_models():
     """
     导入所有 ORM 模型模块，确保被 Base.metadata 注册。
-    
+
     每新增 ORM 模型文件，需要在这里加一行 import，
     否则 create_all 不会创建该表。
     """
     # 导入各 ORM 模型（按需添加）
     import backend.database.orm.supplier_rating  # noqa: F401
-    import backend.database.orm.store_rating      # noqa: F401
-    import backend.database.orm.package_rating    # noqa: F401
+    import backend.database.orm.store_rating  # noqa: F401
+    import backend.database.orm.package_rating  # noqa: F401
 
 
 def _print_tables():

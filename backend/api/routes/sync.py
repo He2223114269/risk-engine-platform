@@ -29,6 +29,7 @@ router = APIRouter(prefix="/api/sync", tags=["数据同步"])
 
 # ── 请求/响应模型 ──
 
+
 class SyncRequest(BaseModel):
     tables: Optional[list[str]] = None
     schema: Optional[str] = None
@@ -42,6 +43,7 @@ class SyncResponse(BaseModel):
 
 
 # ── 路由 ──
+
 
 @router.post("/run", response_model=SyncResponse)
 def trigger_sync(req: SyncRequest):

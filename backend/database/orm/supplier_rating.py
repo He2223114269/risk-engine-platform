@@ -14,8 +14,17 @@
 """
 
 from sqlalchemy import (
-    Column, String, Integer, Date, DateTime, Text,
-    VARCHAR, INT, DECIMAL, DATE, DATETIME
+    Column,
+    String,
+    Integer,
+    Date,
+    DateTime,
+    Text,
+    VARCHAR,
+    INT,
+    DECIMAL,
+    DATE,
+    DATETIME,
 )
 from sqlalchemy.sql import func
 
@@ -29,18 +38,12 @@ class SupplierEvaluation(Base):
     __table_args__ = {"comment": "代理商综合评价数据表 v2.0 — 保障金评级用"}
 
     # ── 主键 ──
-    supplier_id = Column(
-        VARCHAR(32), primary_key=True,
-        comment="代理商唯一编码"
-    )
+    supplier_id = Column(VARCHAR(32), primary_key=True, comment="代理商唯一编码")
 
     # ── 基本信息 ──
     supplier_name = Column(VARCHAR(128), comment="代理商名称")
     province = Column(VARCHAR(64), comment="省份")
-    cooperate_status = Column(
-        VARCHAR(16), default="正常",
-        comment="合作状态（正常/暂停/终止）"
-    )
+    cooperate_status = Column(VARCHAR(16), default="正常", comment="合作状态（正常/暂停/终止）")
 
     # ── 展业稳定性 ──
     business_start_date = Column(DATE, comment="首次展业时间")
@@ -86,13 +89,9 @@ class SupplierEvaluation(Base):
     unsubscribe_rate = Column(DECIMAL(6, 5), comment="退订率")
 
     # ── 风控通过率 ──
-    risk_pass_rate = Column(
-        DECIMAL(6, 5),
-        comment="风控通过率（剔除保证金白名单+特批白名单）"
-    )
+    risk_pass_rate = Column(DECIMAL(6, 5), comment="风控通过率（剔除保证金白名单+特批白名单）")
     risk_pass_rate_deviation = Column(
-        DECIMAL(6, 5),
-        comment="风控通过率偏离度（该代理商 - 全省均值）"
+        DECIMAL(6, 5), comment="风控通过率偏离度（该代理商 - 全省均值）"
     )
 
     # ── 风险合规 ──
@@ -104,9 +103,10 @@ class SupplierEvaluation(Base):
     data_date = Column(DATE, comment="数据截止日期")
     remark = Column(Text, comment="备注")
     update_time = Column(
-        DATETIME, server_default=func.current_timestamp(),
+        DATETIME,
+        server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
-        comment="最后更新时间"
+        comment="最后更新时间",
     )
 
     def to_dict(self) -> dict:

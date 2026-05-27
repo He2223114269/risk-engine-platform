@@ -27,7 +27,6 @@ DB_CONFIG = {
         "env_var": "RISK_DB_PASSWORD",
         "database": "ods",
     },
-
     # ── 淘顺分期 MySQL ────────────────────────────────
     "ts": {
         "host": "taoshunfq.rwlb.rds.aliyuncs.com",
@@ -37,7 +36,6 @@ DB_CONFIG = {
         "env_var": "TS_DB_PASSWORD",
         "database": "taoshun_fenqi",
     },
-
     # ── 百旅 ──────────────────────────────────────
     "bl": {
         "host": "bailv.rwlb.rds.aliyuncs.com",
@@ -47,7 +45,6 @@ DB_CONFIG = {
         "env_var": "BL_DB_PASSWORD",
         "database": "bailv_np",
     },
-
     # ── 百旅风控 ──────────────────────────────────────
     "bl_risk": {
         "host": "bailv.rwlb.rds.aliyuncs.com",
@@ -57,7 +54,6 @@ DB_CONFIG = {
         "env_var": "BL_RISK_DB_PASSWORD",
         "database": "bailv_np",
     },
-
     # ── 通融分期 ──────────────────────────────────────
     "tr_risk": {
         "host": "lb-b3eaquue-arcsolybxgzn4ew8.clb.gz-tencentclb.com",
@@ -67,7 +63,6 @@ DB_CONFIG = {
         "env_var": "TR_RISK_DB_PASSWORD",
         "database": "bailv_np",
     },
-
     "tr_fusing": {
         "host": "lb-b3eaquue-arcsolybxgzn4ew8.clb.gz-tencentclb.com",
         "port": 3306,
@@ -76,7 +71,6 @@ DB_CONFIG = {
         "env_var": "TR_FUSING_DB_PASSWORD",
         "database": "bailv_np",
     },
-
     # ── 淘顺风控（旧） ─────────────────────────────────
     "ts_risk": {
         "host": "taoshunfq.rwlb.rds.aliyuncs.com",
@@ -86,7 +80,6 @@ DB_CONFIG = {
         "env_var": "TS_RISK_DB_PASSWORD",
         "database": "taoshun_fenqi",
     },
-
     "ts_fusing": {
         "host": "taoshunfq.rwlb.rds.aliyuncs.com",
         "port": 3306,
@@ -95,7 +88,6 @@ DB_CONFIG = {
         "env_var": "TS_FUSING_DB_PASSWORD",
         "database": "taoshun_fenqi",
     },
-
     # ── 淘顺全库 ──────────────────────────────────────
     "tsck": {
         "host": "rm-wz93sqg82m6y8cu56so.mysql.rds.aliyuncs.com",
@@ -105,7 +97,6 @@ DB_CONFIG = {
         "env_var": "TSCK_DB_PASSWORD",
         "database": "taoshun_all",
     },
-
     # ── Hive（大数据平台） ─────────────────────────────
     "hive": {
         "host": "47.107.182.51",
@@ -115,7 +106,6 @@ DB_CONFIG = {
         "env_var": "HIVE_DB_PASSWORD",
         "database": "ods",
     },
-
     # ── 本地库 ────────────────────────────────────────
     "local": {
         "host": "172.31.80.1",

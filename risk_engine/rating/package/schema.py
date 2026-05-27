@@ -1,4 +1,5 @@
 """套餐评级 - 写入侧数据契约"""
+
 from dataclasses import dataclass
 from typing import Optional
 from datetime import date

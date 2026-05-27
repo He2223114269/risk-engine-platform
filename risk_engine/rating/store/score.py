@@ -17,7 +17,9 @@ import pandas as pd
 import numpy as np
 
 from risk_engine.rating.base import (
-    map_score_inverse, map_score_linear, map_score_by_percentile,
+    map_score_inverse,
+    map_score_linear,
+    map_score_by_percentile,
 )
 from risk_engine.rating.store.config import DIMENSION_WEIGHTS, CHANNEL_LEVEL_SCORE
 
@@ -27,8 +29,9 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
 
     # ── 数据充足标记 ──
     result["data_sufficient"] = result.apply(
-        lambda r: r["total_transaction_count"] >= 20 and r["active_months"] >= 2
-                  and r.get("matured_order_count", 0) > 0,
+        lambda r: r["total_transaction_count"] >= 20
+        and r["active_months"] >= 2
+        and r.get("matured_order_count", 0) > 0,
         axis=1,
     )
 
@@ -49,16 +52,15 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
     result["score_unsub"] = result["unsubscribe_rate"].apply(
         lambda x: map_score_inverse(x, best=0.0, worst=0.30)
     )
-    result["score_asset_quality"] = (
-        result["score_overdue"] * 0.7 + result["score_unsub"] * 0.3
-    )
+    result["score_asset_quality"] = result["score_overdue"] * 0.7 + result["score_unsub"] * 0.3
 
     # ══════════════════════════════════════════════════════════
     #  2. 客群质量 (20%)
     # ══════════════════════════════════════════════════════════
 
     result["new_customer_rate"] = result.apply(
-        lambda r: r["new_customer_count"] / max(r["new_customer_count"] + r["old_customer_count"], 1),
+        lambda r: r["new_customer_count"]
+        / max(r["new_customer_count"] + r["old_customer_count"], 1),
         axis=1,
     )
     result["fusion_rate"] = result.apply(
@@ -66,7 +68,8 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
         axis=1,
     )
     result["local_network_rate"] = result.apply(
-        lambda r: r["local_network_count"] / max(r["local_network_count"] + r["external_network_count"], 1),
+        lambda r: r["local_network_count"]
+        / max(r["local_network_count"] + r["external_network_count"], 1),
         axis=1,
     )
 
@@ -74,12 +77,8 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
     result["score_new_customer"] = result["new_customer_rate"].apply(
         lambda x: map_score_inverse(x, best=0.0, worst=1.0)
     )
-    result["score_fusion"] = result["fusion_rate"].apply(
-        lambda x: 30 + x * 70
-    )
-    result["score_local"] = result["local_network_rate"].apply(
-        lambda x: 30 + x * 70
-    )
+    result["score_fusion"] = result["fusion_rate"].apply(lambda x: 30 + x * 70)
+    result["score_local"] = result["local_network_rate"].apply(lambda x: 30 + x * 70)
     # 通过率异常（偏离省均值越远越差——过高或过低都扣分）
     prov_avg = result.groupby("province")["risk_pass_rate"].transform("mean")
     result["risk_pass_rate_deviation"] = (result["risk_pass_rate"] - prov_avg).abs()
@@ -117,9 +116,7 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
         lambda x: map_score_linear(x, best=6.0, worst=0.0)
     )
     result["score_scale"] = map_score_by_percentile(result["total_transaction_count"])
-    result["score_operation"] = (
-        result["score_active"] * 0.4 + result["score_scale"] * 0.6
-    )
+    result["score_operation"] = result["score_active"] * 0.4 + result["score_scale"] * 0.6
 
     # ══════════════════════════════════════════════════════════
     #  5. 规模趋势 (10%)

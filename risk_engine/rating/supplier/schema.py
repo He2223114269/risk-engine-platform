@@ -110,7 +110,5 @@ def df_to_records(df, data_date: date) -> list[dict]:
             data_date=data_date,
         )
         # 只把非 None 的字段写入 dict
-        records.append(
-            {k: v for k, v in record.__dict__.items() if v is not None}
-        )
+        records.append({k: v for k, v in record.__dict__.items() if v is not None})
     return records

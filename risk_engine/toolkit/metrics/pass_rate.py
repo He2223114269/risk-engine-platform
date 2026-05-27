@@ -84,14 +84,10 @@ _DEDUP_SUB = f"""
 METRICS_REGISTRY = {
     # ─── 基础量 ───
     "申请数": "COUNT(*) AS 申请数",
-    "通过数": (
-        "SUM(CASE WHEN apply_status = '授信成功' THEN 1 ELSE 0 END) AS 通过数"
-    ),
+    "通过数": ("SUM(CASE WHEN apply_status = '授信成功' THEN 1 ELSE 0 END) AS 通过数"),
     "特批用户数": (
-        "SUM(CASE WHEN first_risk_result = '特批白名单用户'"
-        " THEN 1 ELSE 0 END) AS 特批用户数"
+        "SUM(CASE WHEN first_risk_result = '特批白名单用户'" " THEN 1 ELSE 0 END) AS 特批用户数"
     ),
-
     # ─── 通过率 ───
     # 裸通过率：排除特批白名单用户
     "通过率": (
@@ -111,7 +107,6 @@ METRICS_REGISTRY = {
         "  / NULLIF(COUNT(*), 0), 4"
         ") AS 特批通过率"
     ),
-
     # ─── 异网/本网占比及通过率 ───
     "异网占比": (
         "ROUND("
@@ -142,7 +137,6 @@ METRICS_REGISTRY = {
         "  ), 2"
         ") AS 本网通过率"
     ),
-
     # ─── 新客占比及通过率 ───
     # 新客定义: online_duration <= 3 个月
     "新客占比": (
@@ -166,7 +160,7 @@ METRICS_REGISTRY = {
 # ── 维度定义 ──
 # 键 = 维度标识, 值 = (SQL 表达式, 输出列名)
 DIMS_REGISTRY = {
-    "date":     ("DATE_FORMAT(add_time, '%Y-%m-%d')", "日期"),
+    "date": ("DATE_FORMAT(add_time, '%Y-%m-%d')", "日期"),
     "province": ("store_addr_province", "省份"),
     "strategy": ("strategy_id", "策略ID"),
 }
@@ -218,6 +212,7 @@ def _build_where(
 # ========================================================================
 #  主类
 # ========================================================================
+
 
 class PassRateCalculator:
     """
@@ -297,19 +292,16 @@ class PassRateCalculator:
                 datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=days - 1)
             ).strftime("%Y-%m-%d")
         elif start_date is None:
-            start_date = (
-                datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=6)
-            ).strftime("%Y-%m-%d")
+            start_date = (datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=6)).strftime(
+                "%Y-%m-%d"
+            )
 
         # 构建 SQL
         metrics = metrics or list(METRICS_REGISTRY.keys())
         select_clause = _build_select(dims, metrics)
         where_clause = _build_where(start_date, end_date, where_extra, custtype)
 
-        dim_labels = [
-            DIMS_REGISTRY[d][1] if d in DIMS_REGISTRY else d
-            for d in dims
-        ]
+        dim_labels = [DIMS_REGISTRY[d][1] if d in DIMS_REGISTRY else d for d in dims]
         group_clause = ", ".join(dim_labels) if dim_labels else "1"
         order_clause = ", ".join(dim_labels) if dim_labels else "1"
 
@@ -425,9 +417,8 @@ ORDER BY {order_clause}
         df = self.report(
             dims=[],
             start_date=(
-                datetime.strptime(
-                    end_date or datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d"
-                ) - timedelta(days=days - 1)
+                datetime.strptime(end_date or datetime.now().strftime("%Y-%m-%d"), "%Y-%m-%d")
+                - timedelta(days=days - 1)
             ).strftime("%Y-%m-%d"),
             end_date=end_date,
             metrics=list(METRICS_REGISTRY.keys()),
@@ -435,8 +426,11 @@ ORDER BY {order_clause}
         )
         if df.empty:
             return {
-                "申请数": 0, "通过数": 0,
-                "通过率": 0.0, "异网占比": 0.0, "新客占比": 0.0,
+                "申请数": 0,
+                "通过数": 0,
+                "通过率": 0.0,
+                "异网占比": 0.0,
+                "新客占比": 0.0,
             }
 
         row = df.iloc[0]
@@ -473,18 +467,21 @@ ORDER BY {order_clause}
         except Exception:
             # 备用默认值
             std_map = {
-                "湖南省": 55.0, "贵州省": 70.0,
-                "甘肃省": 70.0, "江苏省": 40.0,
-                "安徽省": 55.0, "江西省": 50.0,
-                "海南省": 60.0, "宁夏回族自治区": 50.0,
+                "湖南省": 55.0,
+                "贵州省": 70.0,
+                "甘肃省": 70.0,
+                "江苏省": 40.0,
+                "安徽省": 55.0,
+                "江西省": 50.0,
+                "海南省": 60.0,
+                "宁夏回族自治区": 50.0,
                 "青海省": 50.0,
             }
 
         df["标准通过率%"] = df["省份"].map(std_map)
         df["差距"] = (df["通过率%"] - df["标准通过率%"]).round(2)
         df["评估"] = df["差距"].apply(
-            lambda x: "✅ 优秀" if x >= -3
-            else ("🟡 达标" if x >= -5 else "🔴 不达标")
+            lambda x: "✅ 优秀" if x >= -3 else ("🟡 达标" if x >= -5 else "🔴 不达标")
         )
         return df[["省份", "申请数", "通过率%", "标准通过率%", "差距", "评估"]]
 
@@ -495,6 +492,7 @@ ORDER BY {order_clause}
 # ========================================================================
 #  便捷函数
 # ========================================================================
+
 
 def calc_pass_rate(
     conn,

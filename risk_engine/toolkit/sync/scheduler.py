@@ -33,7 +33,9 @@ logger = logging.getLogger("sync_scheduler")
 
 def run_once(schema: str = None, table_names: list = None, mode: str = "full"):
     """立即执行一次同步"""
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 开始 {' '.join(table_names or ['全部'])} 同步")
+    print(
+        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 开始 {' '.join(table_names or ['全部'])} 同步"
+    )
     results = run_sync(table_names=table_names, schema=schema, mode=mode)
     return results
 
@@ -42,6 +44,7 @@ def run_cron(cron_expr: str, schema: str = None):
     """按 Cron 表达式定时运行"""
     try:
         from crontab import CronTab
+
         cron = CronTab(cron_expr)
     except ImportError:
         print("⚠️ 未安装 python-crontab，请执行: pip install python-crontab")
