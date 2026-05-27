@@ -223,7 +223,11 @@ def _write_to_local(tbl: DDLEntry, df: pd.DataFrame):
         for _, row in batch.iterrows():
             vals = []
             for v in row:
-                if pd.isna(v) or isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
+                if (
+                    pd.isna(v)
+                    or isinstance(v, (float, np.floating))
+                    and (np.isnan(v) or np.isinf(v))
+                ):
                     vals.append(None)
                 else:
                     vals.append(v.item() if hasattr(v, "item") else v)

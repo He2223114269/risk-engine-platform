@@ -172,7 +172,11 @@ def _write_to_mysql(tbl: SyncTableConfig, df: pd.DataFrame, sync_date: str):
         for _, row in batch.iterrows():
             vals = []
             for v in row:
-                if pd.isna(v) or isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
+                if (
+                    pd.isna(v)
+                    or isinstance(v, (float, np.floating))
+                    and (np.isnan(v) or np.isinf(v))
+                ):
                     vals.append(None)
                 else:
                     vals.append(v.item() if hasattr(v, "item") else v)
