@@ -25,7 +25,7 @@ DATA_DIR = ROOT / "data" / "simulations"
 def _ensure_serializable(obj: Any) -> Any:
     """将配置对象转为纯字典，确保 JSON 可序列化"""
     if dataclasses.is_dataclass(obj):
-        return dataclasses.asdict(obj)
+        return dataclasses.asdict(obj)  # type: ignore[arg-type]
     if isinstance(obj, dict):
         return {str(k): _ensure_serializable(v) for k, v in obj.items()}
     if isinstance(obj, list):

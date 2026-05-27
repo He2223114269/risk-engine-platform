@@ -155,6 +155,8 @@ def run_from_config_file(config_path: str, **overrides) -> dict:
 
     config_path = Path(config_path)
     spec = importlib.util.spec_from_file_location(config_path.stem, config_path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"无法加载配置文件: {config_path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
