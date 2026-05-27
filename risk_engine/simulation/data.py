@@ -102,7 +102,7 @@ def fetch(mode_config: SimulationConfig) -> pd.DataFrame:
             age,
             case when mobile_no = bank_mobile_no then 1 else 0 end AS is_same_telelphon,
             round(return_red_envelope / pack_price, 4) AS subsidy_rate,
-            case when nation = '汉' then '汉族' when nation is not null then '非汉族' else '未知' end AS nation,  # noqa: E501
+            case when nation = '汉' then '汉族' when nation is not null then '非汉族' else '未知' end AS nation,
             is_married,
             education,
             approval_time,
