@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,14 +54,14 @@ def main():
 
     tables = sorted(Base.metadata.tables.keys())
     print(f"\n{'='*50}")
-    print(f"  数据库初始化工具")
+    print("  数据库初始化工具")
     print(f"{'='*50}")
     print(f"\n已注册 {len(tables)} 张表:")
     for t in tables:
         print(f"  ✔ {t}")
 
     if args.dry_run:
-        print(f"\n[DRY RUN] 未执行任何操作\n")
+        print("\n[DRY RUN] 未执行任何操作\n")
         return
 
     # 真实建表
@@ -70,7 +69,7 @@ def main():
 
     Base.metadata.create_all(bind=engine)
 
-    print(f"\n✅ 建表完成")
+    print("\n✅ 建表完成")
 
     # 种子数据（可选）
     if args.seed:

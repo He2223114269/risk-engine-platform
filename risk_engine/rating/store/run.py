@@ -11,8 +11,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
-from typing import Optional
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -28,8 +27,8 @@ from risk_engine.toolkit.connectors import get_data
 
 
 def run_store_rating(
-    data_date: Optional[str] = None,
-    province: Optional[str] = None,
+    data_date: str | None = None,
+    province: str | None = None,
     lookback_months: int = 12,
     write_to_db: bool = True,
 ) -> pd.DataFrame:
@@ -38,7 +37,7 @@ def run_store_rating(
     print(f"    截止: {data_date}, 省份: {province or '全国'}")
 
     # ── 1. 提取基础数据 ──
-    print(f"    1/5 提取基础数据...")
+    print("    1/5 提取基础数据...")
     df = extract_all(end_date=data_date, lookback_months=lookback_months, province=province)
     print(f"        → {len(df)} 家门店")
     if df.empty:
@@ -46,7 +45,7 @@ def run_store_rating(
     store_ids = df["store_id"].tolist()
 
     # ── 2. 渠道等级 ──
-    print(f"    2/5 提取渠道等级...")
+    print("    2/5 提取渠道等级...")
     cl_df = extract_channel_level(store_ids)
     if not cl_df.empty:
         df = df.merge(cl_df[["store_id", "channel_level"]], on="store_id", how="left")
@@ -56,16 +55,16 @@ def run_store_rating(
     print(f"        → 有渠道等级: {matched}/{len(df)}")
 
     # ── 3. 代理商评级 ──
-    print(f"    3/5 提取代理商评级...")
+    print("    3/5 提取代理商评级...")
     sr_df = extract_supplier_rating()
     if not sr_df.empty:
         df = df.merge(sr_df, on="supplier_code", how="left")
     else:
         df["supplier_rating"] = None
-    print(f"        → 完成")
+    print("        → 完成")
 
     # ── 4. 评分 ──
-    print(f"    4/5 评分 + 评级...")
+    print("    4/5 评分 + 评级...")
     df = score_all(df)
     df = assign_ratings(df)
 
@@ -78,7 +77,7 @@ def run_store_rating(
     # ── 5. 落库 ──
     if write_to_db:
         _write_to_db(df, data_date)
-        print(f"    ✅ 数据已写入本地库 risk_control.store_evaluation")
+        print("    ✅ 数据已写入本地库 risk_control.store_evaluation")
 
     print(f"[{datetime.now().strftime('%H:%M:%S')}] 完成")
     return df
@@ -138,9 +137,7 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
     for _, row in records.iterrows():
         vals = []
         for v in row:
-            if pd.isna(v):
-                vals.append(None)
-            elif isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
+            if pd.isna(v) or isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
                 vals.append(None)
             else:
                 try:

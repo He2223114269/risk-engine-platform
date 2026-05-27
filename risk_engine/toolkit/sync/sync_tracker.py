@@ -7,10 +7,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
-from typing import Optional
-
-import pandas as pd
+import contextlib
 
 from risk_engine.toolkit.connectors import get_data
 
@@ -75,19 +72,17 @@ def finish_sync(
 ):
     """记录同步完成。"""
     conn = get_data(data_type="local")
-    try:
+    with contextlib.suppress(Exception):
         conn.execute_sql(f"""
             UPDATE {TRACKER_TABLE}
             SET end_time = NOW(), row_count = {row_count},
                 status = '{status}', remark = '{remark}'
             WHERE table_name = '{table_name}' AND sync_date = '{sync_date}'
         """)
-    except Exception:
-        pass
     conn.close()
 
 
-def get_last_sync(table_name: str) -> Optional[str]:
+def get_last_sync(table_name: str) -> str | None:
     """获取最近一次成功同步的日期。"""
     conn = get_data(data_type="local")
     try:

@@ -16,9 +16,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -32,15 +29,15 @@ router = APIRouter(prefix="/api/sync", tags=["数据同步"])
 
 
 class SyncRequest(BaseModel):
-    tables: Optional[list[str]] = None
-    schema: Optional[str] = None
+    tables: list[str] | None = None
+    schema: str | None = None
     mode: str = "full"
 
 
 class SyncResponse(BaseModel):
     success: bool
     message: str
-    results: Optional[dict] = None
+    results: dict | None = None
 
 
 # ── 路由 ──
@@ -86,7 +83,7 @@ def list_tables():
 
 
 @router.get("/status")
-def sync_status(table: Optional[str] = None):
+def sync_status(table: str | None = None):
     """查看同步状态。"""
     from risk_engine.toolkit.connectors import get_data
     from risk_engine.toolkit.sync.sync_tracker import ensure_tracker_table

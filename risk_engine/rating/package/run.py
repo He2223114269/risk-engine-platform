@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -15,21 +14,21 @@ from risk_engine.toolkit.connectors import get_data
 
 
 def run_package_rating(
-    data_date: Optional[str] = None,
-    province: Optional[str] = None,
+    data_date: str | None = None,
+    province: str | None = None,
     lookback_months: int = 12,
     write_to_db: bool = True,
 ) -> pd.DataFrame:
     data_date = data_date or datetime.now().strftime("%Y-%m-%d")
     print(f"[{datetime.now().strftime('%H:%M:%S')}] 开始套餐评级")
 
-    print(f"    1/3 提取基础数据...")
+    print("    1/3 提取基础数据...")
     df = extract_all(end_date=data_date, lookback_months=lookback_months, province=province)
     print(f"        → {len(df)} 个套餐")
     if df.empty:
         return df
 
-    print(f"    2/3 评分 + 评级...")
+    print("    2/3 评分 + 评级...")
     df = score_all(df)
     df = assign_ratings(df)
     cnts = df["package_rating"].value_counts()

@@ -42,7 +42,6 @@
 from __future__ import annotations
 
 import os
-from typing import Optional
 
 import pandas as pd
 import pymysql
@@ -123,7 +122,7 @@ class get_data:
             df = conn.get_data("SELECT * FROM dws_credit_yzf_order_complete LIMIT 5")
     """
 
-    def __init__(self, data_type: str = "risk", db: Optional[str] = None):
+    def __init__(self, data_type: str = "risk", db: str | None = None):
         """
         Args:
             data_type: 数据库类型，见模块文档
@@ -138,7 +137,7 @@ class get_data:
         self.mysql_db = db if db else config["database"]
         self.data_type = data_type
 
-        self.conn: Optional[pymysql.Connection] = None
+        self.conn: pymysql.Connection | None = None
         self.connect_to_database()
 
     # ─── 连接管理 ───────────────────────────────────────────────

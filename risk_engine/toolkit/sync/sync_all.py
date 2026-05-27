@@ -8,9 +8,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import contextlib
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 
 from risk_engine.toolkit.connectors import get_data
@@ -80,7 +80,7 @@ def sync():
             cols = list(cols_df.columns)
 
         if not cols:
-            print(f"  ❌ 无法获取字段列表")
+            print("  ❌ 无法获取字段列表")
             continue
 
         print(f"  字段数: {len(cols)}")
@@ -92,7 +92,7 @@ def sync():
             f"CREATE TABLE `{local_name}` ({col_defs}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         )
         local_conn.commit()
-        print(f"  ✅ 本地表已创建")
+        print("  ✅ 本地表已创建")
 
         # 分批取数+写入
         total = 0
@@ -115,10 +115,8 @@ def sync():
 
             for _, row in batch.iterrows():
                 vals = [str(v) if pd.notna(v) else None for v in row]
-                try:
+                with contextlib.suppress(BaseException):
                     cur.execute(ins, tuple(vals))
-                except:
-                    pass
             local_conn.commit()
 
             if not paginate:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """同步三张基础表到本地 MySQL"""
 
 import os
@@ -6,9 +5,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import contextlib
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 import pymysql
 
@@ -62,10 +61,8 @@ def sync_table(local_name, select_sql):
         total += len(batch)
         for _, row in batch.iterrows():
             vals = [str(v) if pd.notna(v) else None for v in row]
-            try:
+            with contextlib.suppress(BaseException):
                 cur.execute(ins, tuple(vals))
-            except:
-                pass
         lc.commit()
         offset += B
         if offset % 50000 == 0:

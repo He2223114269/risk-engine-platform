@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -26,8 +25,8 @@ from risk_engine.toolkit.sync.sync_tracker import finish_sync, start_sync
 
 
 def run_sync(
-    table_names: Optional[list] = None,
-    schema: Optional[str] = None,
+    table_names: list | None = None,
+    schema: str | None = None,
     mode: str = "full",
     sync_date: str = None,
     lookback_months: int = 24,
@@ -73,7 +72,7 @@ def run_sync(
 
         # 检查是否已同步过
         if mode == "incremental" and not start_sync(tbl.table_name, sync_date):
-            print(f"    ⏭️ 今日已同步，跳过")
+            print("    ⏭️ 今日已同步，跳过")
             continue
 
         try:
@@ -89,7 +88,7 @@ def run_sync(
             results[tbl.table_name] = -1
 
     print(f"\n{'='*50}")
-    print(f"  同步完成")
+    print("  同步完成")
     for name, cnt in results.items():
         status = "✅" if cnt >= 0 else "❌"
         print(f"  {status} {name}: {cnt:,}" if cnt >= 0 else f"  {status} {name}: 失败")
@@ -100,7 +99,6 @@ def run_sync(
 
 def _sync_table(tbl: DDLEntry, sync_date: str, mode: str, lookback_months: int) -> int:
     """同步单张表。"""
-    from risk_engine.toolkit.sync.sync_tracker import get_last_sync
 
     # 1. 确保本地表存在
     _ensure_local_table(tbl)
@@ -225,9 +223,7 @@ def _write_to_local(tbl: DDLEntry, df: pd.DataFrame):
         for _, row in batch.iterrows():
             vals = []
             for v in row:
-                if pd.isna(v):
-                    vals.append(None)
-                elif isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
+                if pd.isna(v) or isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
                     vals.append(None)
                 else:
                     vals.append(v.item() if hasattr(v, "item") else v)

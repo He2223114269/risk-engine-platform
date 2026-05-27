@@ -2,28 +2,27 @@
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
 
 
 @dataclass
 class PackageEvaluation:
     pack_name: str
-    province: Optional[str] = None
-    business_start_date: Optional[date] = None
-    last_active_date: Optional[date] = None
-    active_months: Optional[int] = None
-    total_transaction_count: Optional[int] = None
-    total_transaction_amount: Optional[float] = None
-    monthly_avg_count: Optional[float] = None
-    new_customer_count: Optional[int] = None
-    old_customer_count: Optional[int] = None
-    local_network_count: Optional[int] = None
-    external_network_count: Optional[int] = None
-    single_card_count: Optional[int] = None
-    fusion_count: Optional[int] = None
-    num_overdue_rate: Optional[float] = None
-    unsubscribe_rate: Optional[float] = None
-    risk_pass_rate: Optional[float] = None
-    compliance_score: Optional[float] = None
-    package_rating: Optional[str] = None
-    data_date: Optional[date] = None
+    province: str | None = None
+    business_start_date: date | None = None
+    last_active_date: date | None = None
+    active_months: int | None = None
+    total_transaction_count: int | None = None
+    total_transaction_amount: float | None = None
+    monthly_avg_count: float | None = None
+    new_customer_count: int | None = None
+    old_customer_count: int | None = None
+    local_network_count: int | None = None
+    external_network_count: int | None = None
+    single_card_count: int | None = None
+    fusion_count: int | None = None
+    num_overdue_rate: float | None = None
+    unsubscribe_rate: float | None = None
+    risk_pass_rate: float | None = None
+    compliance_score: float | None = None
+    package_rating: str | None = None
+    data_date: date | None = None

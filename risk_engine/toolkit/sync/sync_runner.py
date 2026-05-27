@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -20,7 +19,7 @@ from risk_engine.toolkit.sync.sync_tracker import finish_sync, start_sync
 
 
 def run_sync(
-    table_names: Optional[list] = None,
+    table_names: list | None = None,
     mode: str = "full",
     sync_date: str = None,
     lookback_months: int = 24,
@@ -57,7 +56,7 @@ def run_sync(
 
         # 追踪记录
         if write_to_db and not start_sync(tbl.name, sync_date):
-            print(f"    ⏭️ 今日已同步，跳过")
+            print("    ⏭️ 今日已同步，跳过")
             continue
 
         try:
@@ -98,13 +97,10 @@ def _sync_table(
         if last_date:
             where = f"{tbl.filter_sql}\n  AND {tbl.incremental_key} >= '{last_date}'"
         else:
-            print(f"     ⚠️ 无上次同步记录，回退全量模式")
+            print("     ⚠️ 无上次同步记录，回退全量模式")
             where = tbl.filter_sql
 
-    if tbl.columns:
-        cols = ", ".join(tbl.columns)
-    else:
-        cols = "*"
+    cols = ", ".join(tbl.columns) if tbl.columns else "*"
 
     sql = f"SELECT {cols} FROM {tbl.starrocks_table} WHERE {where}"
 
@@ -176,9 +172,7 @@ def _write_to_mysql(tbl: SyncTableConfig, df: pd.DataFrame, sync_date: str):
         for _, row in batch.iterrows():
             vals = []
             for v in row:
-                if pd.isna(v):
-                    vals.append(None)
-                elif isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
+                if pd.isna(v) or isinstance(v, (float, np.floating)) and (np.isnan(v) or np.isinf(v)):
                     vals.append(None)
                 else:
                     vals.append(v.item() if hasattr(v, "item") else v)
@@ -188,7 +182,7 @@ def _write_to_mysql(tbl: SyncTableConfig, df: pd.DataFrame, sync_date: str):
             cursor.executemany(sql, values_list)
             conn.conn.commit()
             written += len(batch)
-        except Exception as e:
+        except Exception:
             # 逐行写入（处理可能有问题的数据）
             conn.conn.rollback()
             for vals in values_list:

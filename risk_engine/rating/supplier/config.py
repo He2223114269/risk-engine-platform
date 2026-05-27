@@ -18,7 +18,6 @@
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Set
 
 
 @dataclass
@@ -27,12 +26,12 @@ class DimensionWeight:
 
     name: str
     weight: float
-    fields: List[str]
+    fields: list[str]
 
 
 # ── 基础权重（假设所有数据源都齐全） ──
 
-BASE_WEIGHTS: Dict[str, float] = {
+BASE_WEIGHTS: dict[str, float] = {
     "逾期质量": 0.32,
     "客群结构": 0.10,
     "规模体量": 0.09,
@@ -45,7 +44,7 @@ BASE_WEIGHTS: Dict[str, float] = {
 
 # ── 根据数据有无动态调整的维度 ──
 # 有数据时用完整权重，无数据时权重归零并重新分配
-CONDITIONAL_DIMENSIONS: Dict[str, Set[str]] = {
+CONDITIONAL_DIMENSIONS: dict[str, set[str]] = {
     "yzf": {"翼支付评级"},  # 依赖翼支付评价表
     "qichacha": {"企业正规度", "资本实力"},  # 依赖企查查
 }
@@ -79,7 +78,7 @@ def validate_weights() -> bool:
 def get_effective_weights(
     has_yzf: bool = True,
     has_qichacha: bool = True,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     根据实际数据覆盖情况，返回动态调整后的权重。
 

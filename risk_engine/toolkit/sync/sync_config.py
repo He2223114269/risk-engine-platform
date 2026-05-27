@@ -5,8 +5,7 @@
 定义需要从 StarRocks 同步到本地 MySQL 的数据表清单。
 """
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 
 @dataclass

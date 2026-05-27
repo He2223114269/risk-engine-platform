@@ -20,10 +20,6 @@ from sqlalchemy import (
     INT,
     VARCHAR,
     Column,
-    Date,
-    DateTime,
-    Integer,
-    String,
     Text,
 )
 from sqlalchemy.sql import func

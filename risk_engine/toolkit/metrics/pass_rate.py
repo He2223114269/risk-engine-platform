@@ -39,7 +39,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 import pandas as pd
 
@@ -168,8 +167,8 @@ DIMS_REGISTRY = {
 
 
 def _build_select(
-    dims: List[str],
-    metrics: List[str],
+    dims: list[str],
+    metrics: list[str],
 ) -> str:
     """构建 SELECT 子句（维度列 + 指标列）"""
     parts = []
@@ -195,8 +194,8 @@ def _build_select(
 def _build_where(
     start_date: str,
     end_date: str,
-    where_extra: Optional[str] = None,
-    custtype: Optional[str] = "00",
+    where_extra: str | None = None,
+    custtype: str | None = "00",
 ) -> str:
     """构建 WHERE 子句"""
     clauses = [
@@ -260,13 +259,13 @@ class PassRateCalculator:
 
     def report(
         self,
-        dims: Optional[List[str]] = None,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-        days: Optional[int] = None,
-        metrics: Optional[List[str]] = None,
-        where_extra: Optional[str] = None,
-        custtype: Optional[str] = "00",
+        dims: list[str] | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        days: int | None = None,
+        metrics: list[str] | None = None,
+        where_extra: str | None = None,
+        custtype: str | None = "00",
     ) -> pd.DataFrame:
         """
         多维度指标报告 — 单次查询完成所有指标。
@@ -325,9 +324,9 @@ ORDER BY {order_clause}
 
     def by_date_province(
         self,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-        days: Optional[int] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        days: int | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """按日 + 分省报告（最常用的监控视图）"""
@@ -341,8 +340,8 @@ ORDER BY {order_clause}
 
     def by_province(
         self,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
         days: int = 30,
         min_total: int = 50,
         **kwargs,
@@ -369,8 +368,8 @@ ORDER BY {order_clause}
     def daily_trend(
         self,
         start_date: str,
-        end_date: Optional[str] = None,
-        province: Optional[str] = None,
+        end_date: str | None = None,
+        province: str | None = None,
     ) -> pd.DataFrame:
         """逐日通过率趋势"""
         df = self.report(
@@ -385,8 +384,8 @@ ORDER BY {order_clause}
 
     def by_strategy(
         self,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
         days: int = 30,
         min_total: int = 30,
     ) -> pd.DataFrame:
@@ -407,8 +406,8 @@ ORDER BY {order_clause}
     def overall(
         self,
         days: int = 7,
-        end_date: Optional[str] = None,
-        province: Optional[str] = None,
+        end_date: str | None = None,
+        province: str | None = None,
     ) -> dict:
         """向下兼容 — 整体通过率
 
@@ -450,7 +449,7 @@ ORDER BY {order_clause}
     def compare_with_standard(
         self,
         days: int = 7,
-        end_date: Optional[str] = None,
+        end_date: str | None = None,
     ) -> pd.DataFrame:
         """向下兼容 — 各省实际通过率 vs 标准通过率"""
         df = self.by_province(days=days, end_date=end_date, min_total=20)
@@ -498,7 +497,7 @@ ORDER BY {order_clause}
 def calc_pass_rate(
     conn,
     days: int = 7,
-    province: Optional[str] = None,
+    province: str | None = None,
 ) -> dict:
     """一行计算整体通过率（向下兼容）"""
     calc = PassRateCalculator(conn)

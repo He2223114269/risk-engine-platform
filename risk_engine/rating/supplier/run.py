@@ -15,12 +15,10 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
-from typing import Optional
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
-import pymysql
 
 from risk_engine.rating.supplier.extract import (
     extract_all,
@@ -34,8 +32,8 @@ from risk_engine.toolkit.connectors import get_data
 
 
 def run_supplier_rating(
-    data_date: Optional[str] = None,
-    province: Optional[str] = None,
+    data_date: str | None = None,
+    province: str | None = None,
     lookback_months: int = 12,
     write_to_db: bool = True,
 ) -> pd.DataFrame:
@@ -47,7 +45,7 @@ def run_supplier_rating(
     print(f"    数据截止: {data_date}, 省份: {province or '全国'}")
 
     # ── Step 1: 提取基础数据 ──
-    print(f"    1/6 提取基础数据...")
+    print("    1/6 提取基础数据...")
     df = extract_all(
         end_date=data_date,
         lookback_months=lookback_months,
@@ -59,7 +57,7 @@ def run_supplier_rating(
         return df
 
     # ── Step 2: 提取门店质量 ──
-    print(f"    2/6 提取门店质量数据...")
+    print("    2/6 提取门店质量数据...")
     supplier_codes = df["supplier_code"].tolist()
     store_df = extract_store_quality(supplier_codes)
     if not store_df.empty:
@@ -86,10 +84,10 @@ def run_supplier_rating(
     else:
         df["store_quality_rate"] = 0
         df["regulated_store_rate"] = 0
-    print(f"        → 完成")
+    print("        → 完成")
 
     # ── Step 3: 补充营业员人数 ──
-    print(f"    3/6 补充营业员人数...")
+    print("    3/6 补充营业员人数...")
     staff_df = extract_staff_count(supplier_codes)
     if not staff_df.empty:
         df = df.merge(staff_df, on="supplier_code", how="left")
@@ -97,13 +95,13 @@ def run_supplier_rating(
     print(f"        → {'完成' if not staff_df.empty else '无数据'}")
 
     # ── Step 4: 导入企查查数据 ──
-    print(f"    4/6 导入企查查数据...")
+    print("    4/6 导入企查查数据...")
     _merge_qichacha(df, data_date)
     qcc_count = df["has_qichacha"].sum()
     print(f"        → 有企查查数据: {qcc_count}/{len(df)} ({qcc_count/len(df)*100:.1f}%)")
 
     # ── Step 5: 导入翼支付评级 ──
-    print(f"    5/6 导入翼支付评级...")
+    print("    5/6 导入翼支付评级...")
     yzf_df = extract_yzf_rating()
     if not yzf_df.empty:
         df = df.merge(yzf_df, on="supplier_code", how="left")
@@ -112,7 +110,7 @@ def run_supplier_rating(
     print(f"        → {'完成' if not yzf_df.empty else '无评级数据'}")
 
     # ── Step 6: 评分 + 评级 ──
-    print(f"    6/6 评分 + 评级...")
+    print("    6/6 评分 + 评级...")
     df = score_all(df)
     df = assign_ratings(df)
 
@@ -127,7 +125,7 @@ def run_supplier_rating(
     # ── 写入本地库 ──
     if write_to_db:
         _write_to_db(df, data_date)
-        print(f"    ✅ 数据已写入本地库 risk_control.supplier_evaluation")
+        print("    ✅ 数据已写入本地库 risk_control.supplier_evaluation")
     print(f"[{datetime.now().strftime('%H:%M:%S')}] 代理商评级流程完成")
     return df
 
@@ -269,16 +267,14 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
             continue
         values = []
         for val in row:
-            if pd.isna(val):
-                values.append(None)
-            elif isinstance(val, (float,)) and (np.isinf(val) or np.isnan(val)):
+            if pd.isna(val) or isinstance(val, (float,)) and (np.isinf(val) or np.isnan(val)):
                 values.append(None)
             else:
                 values.append(val)
         try:
             cursor.execute(sql, tuple(values))
             success += 1
-        except Exception as e:
+        except Exception:
             failed += 1
 
     conn.conn.commit()

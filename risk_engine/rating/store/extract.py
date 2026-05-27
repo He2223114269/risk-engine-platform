@@ -8,8 +8,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
-from typing import Optional
+from datetime import datetime, timedelta
 
 import pandas as pd
 
@@ -23,9 +22,9 @@ _STORE_TABLE = "ods.ods_ts_v3_order_store"
 
 
 def extract_all(
-    end_date: Optional[str] = None,
+    end_date: str | None = None,
     lookback_months: int = 12,
-    province: Optional[str] = None,
+    province: str | None = None,
 ) -> pd.DataFrame:
     """
     一次查询提取所有门店的聚合数据。

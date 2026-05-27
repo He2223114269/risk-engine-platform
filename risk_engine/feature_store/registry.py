@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 __all__ = [
     "FeatureDefinition",
@@ -41,7 +40,7 @@ class FeatureDefinition:
 class FeatureRegistry:
     """特征注册中心"""
 
-    _instance: Optional[FeatureRegistry] = None
+    _instance: FeatureRegistry | None = None
 
     def __new__(cls) -> FeatureRegistry:
         if cls._instance is None:
@@ -53,7 +52,7 @@ class FeatureRegistry:
         """注册一个新特征"""
         raise NotImplementedError
 
-    def get(self, name: str) -> Optional[FeatureDefinition]:
+    def get(self, name: str) -> FeatureDefinition | None:
         """查询特征定义"""
         raise NotImplementedError
 

@@ -52,10 +52,10 @@ def run_cron(cron_expr: str, schema: str = None):
         return
 
     print(f"定时同步已启动: {cron_expr}")
-    print(f"按 Ctrl+C 停止")
+    print("按 Ctrl+C 停止")
 
     while True:
-        now = datetime.now()
+        datetime.now()
         if cron.next(default_utc=False) <= 0:
             run_once(schema=schema)
             time.sleep(60)  # 避免一分钟内重复触发

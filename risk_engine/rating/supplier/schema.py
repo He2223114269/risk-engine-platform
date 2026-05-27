@@ -12,9 +12,8 @@
   如果这里加了字段，后端 ORM 需要同步加（通过代码审查保证）。
 """
 
-from dataclasses import dataclass, field
-from datetime import date, datetime
-from typing import Optional
+from dataclasses import dataclass
+from datetime import date
 
 
 @dataclass
@@ -29,64 +28,64 @@ class SupplierEvaluation:
     supplier_id: str
 
     # ── 基本信息 ──
-    supplier_name: Optional[str] = None
-    province: Optional[str] = None
-    cooperate_status: Optional[str] = "正常"
+    supplier_name: str | None = None
+    province: str | None = None
+    cooperate_status: str | None = "正常"
 
     # ── 展业稳定性（权重 10%） ──
-    business_start_date: Optional[date] = None
-    last_active_date: Optional[date] = None
-    business_duration_days: Optional[int] = None
-    active_months: Optional[int] = None
-    recent_inactive_days: Optional[int] = None
+    business_start_date: date | None = None
+    last_active_date: date | None = None
+    business_duration_days: int | None = None
+    active_months: int | None = None
+    recent_inactive_days: int | None = None
 
     # ── 规模体量（权重 12%） ──
-    store_count: Optional[int] = None
-    staff_count: Optional[int] = None
-    high_quality_store_count: Optional[int] = None
-    regulated_store_count: Optional[int] = None
+    store_count: int | None = None
+    staff_count: int | None = None
+    high_quality_store_count: int | None = None
+    regulated_store_count: int | None = None
 
     # ── 翼支付评级（权重 10%） ──
-    yzf_rating: Optional[str] = None
-    previous_rating: Optional[str] = None
-    yzf_rating_trend: Optional[str] = None
+    yzf_rating: str | None = None
+    previous_rating: str | None = None
+    yzf_rating_trend: str | None = None
 
     # ── 交易活跃度 ──
-    total_transaction_amount: Optional[float] = None
-    total_transaction_count: Optional[int] = None
-    monthly_avg_amount: Optional[float] = None
-    last_month_amount: Optional[float] = None
-    amount_growth_rate: Optional[float] = None
+    total_transaction_amount: float | None = None
+    total_transaction_count: int | None = None
+    monthly_avg_amount: float | None = None
+    last_month_amount: float | None = None
+    amount_growth_rate: float | None = None
 
     # ── 逾期与坏账（权重 40%） ──
-    amt_overdue_rate: Optional[float] = None
-    num_overdue_rate: Optional[float] = None
-    overdue_order_count: Optional[int] = None
-    overdue_amount: Optional[float] = None
-    bad_debt_rate: Optional[float] = None
+    amt_overdue_rate: float | None = None
+    num_overdue_rate: float | None = None
+    overdue_order_count: int | None = None
+    overdue_amount: float | None = None
+    bad_debt_rate: float | None = None
 
     # ── 客群结构（权重 15%） ──
-    new_customer_count: Optional[int] = None
-    old_customer_count: Optional[int] = None
-    local_network_count: Optional[int] = None
-    external_network_count: Optional[int] = None
-    single_card_count: Optional[int] = None
-    fusion_count: Optional[int] = None
+    new_customer_count: int | None = None
+    old_customer_count: int | None = None
+    local_network_count: int | None = None
+    external_network_count: int | None = None
+    single_card_count: int | None = None
+    fusion_count: int | None = None
 
     # ── 退订 ──
-    unsubscribe_rate: Optional[float] = None
+    unsubscribe_rate: float | None = None
 
     # ── 风控通过率异常（权重 5%） ──
-    risk_pass_rate: Optional[float] = None
-    risk_pass_rate_deviation: Optional[float] = None
+    risk_pass_rate: float | None = None
+    risk_pass_rate_deviation: float | None = None
 
     # ── 风险合规 ──
-    penalty_count: Optional[int] = None
-    compliance_score: Optional[float] = None
-    supplier_rating: Optional[str] = None
+    penalty_count: int | None = None
+    compliance_score: float | None = None
+    supplier_rating: str | None = None
 
     # ── 审计 ──
-    data_date: Optional[date] = None
+    data_date: date | None = None
 
 
 def df_to_records(df, data_date: date) -> list[dict]:

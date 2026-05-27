@@ -6,8 +6,7 @@
 明确定义字段类型、索引、注释，不依赖 StarRocks 自动推断。
 """
 
-from dataclasses import dataclass, field
-from typing import List, Optional
+from dataclasses import dataclass
 
 
 @dataclass

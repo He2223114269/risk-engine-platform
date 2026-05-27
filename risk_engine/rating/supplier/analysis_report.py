@@ -11,7 +11,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-import pymysql
 
 from risk_engine.toolkit.connectors import get_data
 
@@ -68,14 +67,14 @@ def generate_report(data_date: str, output_path: str = None) -> str:
 
     # ═══════ 报告正文 ═══════
 
-    h1(f"代理商评级分析报告")
+    h1("代理商评级分析报告")
     w(f"\n> 数据截止: {data_date} | 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    w(f"> 数据来源: `risk_control.supplier_evaluation` 表")
+    w("> 数据来源: `risk_control.supplier_evaluation` 表")
 
     h2("一、总体概览")
 
-    w(f"| 指标 | 数值 |")
-    w(f"|:----|:----:|")
+    w("| 指标 | 数值 |")
+    w("|:----|:----:|")
     w(f"| 参与评级的代理商总数 | **{total}** |")
     w(f"| A 级 (前1%) | **{a_cnt}** 家 ({a_cnt/total*100:.1f}%) |")
     w(f"| B 级 (1%~20%) | **{b_cnt}** 家 ({b_cnt/total*100:.1f}%) |")
@@ -105,8 +104,8 @@ def generate_report(data_date: str, output_path: str = None) -> str:
         .round(4)
     )
 
-    w(f"\n| 评级 | 数量 | 平均分 | 逾期率 | 通过率 | 交易笔数 | 活跃月 | 门店数 | 老客占比 |")
-    w(f"|:---:|:----:|:-----:|:-----:|:-----:|:-------:|:-----:|:-----:|:-------:|")
+    w("\n| 评级 | 数量 | 平均分 | 逾期率 | 通过率 | 交易笔数 | 活跃月 | 门店数 | 老客占比 |")
+    w("|:---:|:----:|:-----:|:-----:|:-----:|:-------:|:-----:|:-----:|:-------:|")
     for rating in ["A", "B", "C"]:
         r = cross.loc[rating]
         w(
@@ -127,7 +126,7 @@ def generate_report(data_date: str, output_path: str = None) -> str:
     if failed:
         w(f"\n> ⚠️ **趋势异常**: {', '.join(failed)} 非单调递减/递增")
     else:
-        w(f"\n> ✅ **所有核心指标趋势正确**: 逾期率 A<B<C, 其余 A>B>C")
+        w("\n> ✅ **所有核心指标趋势正确**: 逾期率 A<B<C, 其余 A>B>C")
 
     h2("三、翼支付评级 × 我方评分一致性")
 
@@ -145,8 +144,8 @@ def generate_report(data_date: str, output_path: str = None) -> str:
             .round(2)
         )
 
-        w(f"\n| 翼支付评级 | 数量 | 我方平均评分 | 平均逾期率 | 一致性 |")
-        w(f"|:---------:|:----:|:----------:|:---------:|:------:|")
+        w("\n| 翼支付评级 | 数量 | 我方平均评分 | 平均逾期率 | 一致性 |")
+        w("|:---------:|:----:|:----------:|:---------:|:------:|")
         prev_score = 999
         for rating in ["A", "B", "C", "D", "E"]:
             if rating in yzf_cross.index:
@@ -167,7 +166,7 @@ def generate_report(data_date: str, output_path: str = None) -> str:
             corr_note = f"Spearman 相关系数 = {corr:.3f} (p={pval:.4f})"
             w(f"\n> 外部评级与我方评分: **{corr_note}**" + (" ✅ 强正相关" if corr > 0.5 else ""))
     else:
-        w(f"\n> ⚠️ 无翼支付评级数据，无法校验")
+        w("\n> ⚠️ 无翼支付评级数据，无法校验")
 
     h2("四、逾期率分段分布")
 
@@ -186,9 +185,8 @@ def generate_report(data_date: str, output_path: str = None) -> str:
         .round(1)
     )
 
-    w(f"\n| 逾期率段 | 代理商数 | 占比 | 平均评分 | 平均交易笔数 |")
-    w(f"|:-------:|:-------:|:---:|:-------:|:-----------:|")
-    prev_overdue = -1
+    w("\n| 逾期率段 | 代理商数 | 占比 | 平均评分 | 平均交易笔数 |")
+    w("|:-------:|:-------:|:---:|:-------:|:-----------:|")
     for bucket in ["0%", "0~2%", "2~5%", "5~10%", ">10%"]:
         if bucket in overdue_dist.index:
             r = overdue_dist.loc[bucket]
@@ -201,7 +199,7 @@ def generate_report(data_date: str, output_path: str = None) -> str:
 
     # 从DB补数据充足度信息
     sufficient_df = _query(f"""
-        SELECT 
+        SELECT
             CASE WHEN total_transaction_count < 20 OR active_months < 2 THEN '数据不足' ELSE '数据充足' END as stage,
             COUNT(*) as cnt,
             ROUND(AVG(compliance_score),1) as avg_score,
@@ -213,8 +211,8 @@ def generate_report(data_date: str, output_path: str = None) -> str:
     """)
 
     if not sufficient_df.empty:
-        w(f"\n| 状态 | 数量 | 占比 | 平均评分 | 平均逾期率 | 平均交易笔数 |")
-        w(f"|:---:|:----:|:---:|:-------:|:---------:|:------------:|")
+        w("\n| 状态 | 数量 | 占比 | 平均评分 | 平均逾期率 | 平均交易笔数 |")
+        w("|:---:|:----:|:---:|:-------:|:---------:|:------------:|")
         for _, r in sufficient_df.iterrows():
             w(
                 f"| {r['stage']} | {int(r['cnt'])} | {int(r['cnt'])/total*100:.1f}% | {r['avg_score']:.0f} | {r['avg_overdue']*100:.2f}% | {r['avg_orders']:.0f} |"
@@ -234,8 +232,8 @@ def generate_report(data_date: str, output_path: str = None) -> str:
         .round(1)
     )
 
-    w(f"\n| 省份 | 代理商数 | 占比 | 平均评分 | A级 | B级 |")
-    w(f"|:---:|:-------:|:---:|:-------:|:---:|:---:|")
+    w("\n| 省份 | 代理商数 | 占比 | 平均评分 | A级 | B级 |")
+    w("|:---:|:-------:|:---:|:-------:|:---:|:---:|")
     for _, r in prov_dist.iterrows():
         w(
             f"| {r.name} | {int(r['代理商数'])} | {int(r['代理商数'])/total*100:.1f}% | {r['平均评分']:.0f} | {int(r['A级数'])} | {int(r['B级数'])} |"
@@ -246,13 +244,13 @@ def generate_report(data_date: str, output_path: str = None) -> str:
     w(
         f"\n本次评级共完成 **{total}** 家代理商评级，评级分布为 A级 **{a_cnt}** / B级 **{b_cnt}** / C级 **{c_cnt}**。"
     )
-    w(f"\n各维度交叉验证表明：")
-    w(f"\n- ✅ 逾期率：A<B<C，与评级严格负相关（最强区分因子）")
-    w(f"\n- ✅ 交易规模：A>B>C，规模越大的代理商评级越高")
-    w(f"\n- ✅ 展业稳定性：A>B>C，活跃越久的代理商越优质")
-    w(f"\n- ✅ 外部验证：翼支付评级与我方评分高度一致")
-    w(f"\n- ⚠️ 待改进：门店质量数据覆盖不足，当前未参与评分")
-    w(f"\n- ⚠️ 待改进：金额维度逾期率尚未纳入计算")
+    w("\n各维度交叉验证表明：")
+    w("\n- ✅ 逾期率：A<B<C，与评级严格负相关（最强区分因子）")
+    w("\n- ✅ 交易规模：A>B>C，规模越大的代理商评级越高")
+    w("\n- ✅ 展业稳定性：A>B>C，活跃越久的代理商越优质")
+    w("\n- ✅ 外部验证：翼支付评级与我方评分高度一致")
+    w("\n- ⚠️ 待改进：门店质量数据覆盖不足，当前未参与评分")
+    w("\n- ⚠️ 待改进：金额维度逾期率尚未纳入计算")
 
     report_text = "\n".join(lines)
 

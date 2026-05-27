@@ -15,7 +15,6 @@
 """
 
 from dataclasses import dataclass
-from typing import Dict, List
 
 
 @dataclass
@@ -24,10 +23,10 @@ class DimensionWeight:
 
     name: str
     weight: float
-    fields: List[str]
+    fields: list[str]
 
 
-DIMENSION_WEIGHTS: Dict[str, DimensionWeight] = {
+DIMENSION_WEIGHTS: dict[str, DimensionWeight] = {
     "资产质量": DimensionWeight(
         name="资产质量",
         weight=0.30,

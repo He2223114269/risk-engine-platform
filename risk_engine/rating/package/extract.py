@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Optional
-
-import pandas as pd
 
 from risk_engine.toolkit.connectors import get_data
 
@@ -56,7 +53,7 @@ def extract_all(end_date=None, lookback_months=12, province=None):
     if df.empty:
         return df
 
-    ref = datetime.strptime(end_date, "%Y-%m-%d")
+    datetime.strptime(end_date, "%Y-%m-%d")
     df["num_overdue_rate"] = df.apply(
         lambda r: (
             r["overdue_order_count"] / r["matured_order_count"]
