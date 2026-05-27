@@ -183,5 +183,3 @@ def save_result(
     if summary:
         with open(folder / "summary.json", "w", encoding="utf-8") as f:
             json.dump(_ensure_serializable(summary), f, indent=2, ensure_ascii=False, default=str)
-
-
