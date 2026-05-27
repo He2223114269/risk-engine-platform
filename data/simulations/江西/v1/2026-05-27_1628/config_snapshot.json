@@ -1,0 +1,92 @@
+{
+  "province": "江西省",
+  "version": "v1",
+  "description": "江西决策树模型 v1 — baseline",
+  "base": null,
+  "data_date": "2025-06-10",
+  "data_start": "2025-01-01",
+  "exclude_industry_advance": true,
+  "strategy_source": "sys_parameter",
+  "strategy_business": "淘顺实时授信",
+  "result_filter": "2511",
+  "score_table": "risk_score_control",
+  "cutoff_table": "risk_cutoff",
+  "tree_version": "jiangxi_v1",
+  "tree_features": [
+    "is_bw",
+    "gender",
+    "age_interval",
+    "amt_interval",
+    "onlinetime",
+    "province_is_one"
+  ],
+  "age_bins": [
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    50,
+    55,
+    60,
+    65
+  ],
+  "age_labels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "amt_bins": [
+    0,
+    1000,
+    1500,
+    2000,
+    2500,
+    3000,
+    Infinity
+  ],
+  "amt_labels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "pass_ratios": [
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95
+  ],
+  "lxf_table": "ods.ods_ts_order_white_list_control",
+  "output_format": "all",
+  "_meta": {
+    "province": "江西",
+    "version": "v1",
+    "label": "2026-05-27_1628",
+    "saved_at": "2026-05-27T16:28:24.770831"
+  }
+}

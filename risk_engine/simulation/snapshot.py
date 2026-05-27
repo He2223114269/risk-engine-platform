@@ -18,7 +18,7 @@ from typing import Any
 import pandas as pd
 
 # ── 项目根目录 ──
-ROOT = Path(__file__).resolve().parent.parent.parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = ROOT / "data" / "simulations"
 
 
