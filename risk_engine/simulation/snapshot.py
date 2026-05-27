@@ -9,11 +9,10 @@
 
 from __future__ import annotations
 
+import dataclasses
 import json
-from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from dataclasses import dataclass, field
 from typing import Any
 
 import pandas as pd
@@ -96,7 +95,7 @@ def load_snapshot(province: str, version: str, label: str) -> dict:
     if not snapshot_path.exists():
         raise FileNotFoundError(f"快照不存在: {snapshot_path}")
 
-    with open(snapshot_path, "r", encoding="utf-8") as f:
+    with open(snapshot_path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -116,16 +115,18 @@ def list_snapshots(province: str, version: str) -> list[dict]:
         snapshot_file = folder / "config_snapshot.json"
         if snapshot_file.exists():
             try:
-                with open(snapshot_file, "r", encoding="utf-8") as f:
+                with open(snapshot_file, encoding="utf-8") as f:
                     config = json.load(f)
                 meta = config.get("_meta", {})
-                results.append({
-                    "label": folder.name,
-                    "province": meta.get("province", province),
-                    "version": meta.get("version", version),
-                    "saved_at": meta.get("saved_at", ""),
-                    "path": str(folder),
-                })
+                results.append(
+                    {
+                        "label": folder.name,
+                        "province": meta.get("province", province),
+                        "version": meta.get("version", version),
+                        "saved_at": meta.get("saved_at", ""),
+                        "path": str(folder),
+                    }
+                )
             except Exception:
                 continue
 
@@ -184,5 +185,3 @@ def save_result(
             json.dump(_ensure_serializable(summary), f, indent=2, ensure_ascii=False, default=str)
 
 
-# 缺少 dataclasses 的 pre-import
-import dataclasses

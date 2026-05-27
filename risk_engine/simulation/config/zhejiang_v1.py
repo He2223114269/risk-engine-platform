@@ -1,6 +1,7 @@
 """
 浙江 v1 仿真配置 — 继承江西决策树，换浙江省数据
 """
+
 from risk_engine.simulation.config.presets import Jiangxi_v1
 
 # 浙江 v1：直接继承江西的决策树和分箱方案，只换省份

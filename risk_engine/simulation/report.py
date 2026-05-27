@@ -8,6 +8,7 @@
 """
 
 from __future__ import annotations
+
 from datetime import datetime
 
 import pandas as pd
@@ -56,21 +57,29 @@ def generate_markdown(
         total_samples = parameters.groupby("strategy_type")["total_count"].first().sum()
         total_overdue = parameters.groupby("strategy_type")["overdue_count"].first().sum()
         branches = parameters["strategy_type"].nunique()
-        lines.extend([
-            f"- 策略分支数: **{branches}**",
-            f"- 总样本数: **{total_samples:,}**",
-            f"- 总逾期数: **{total_overdue:,}**",
-            f"- 整体逾期率: **{total_overdue/total_samples*100:.2f}%**" if total_samples > 0 else "",
-            "",
-        ])
+        lines.extend(
+            [
+                f"- 策略分支数: **{branches}**",
+                f"- 总样本数: **{total_samples:,}**",
+                f"- 总逾期数: **{total_overdue:,}**",
+                (
+                    f"- 整体逾期率: **{total_overdue/total_samples*100:.2f}%**"
+                    if total_samples > 0
+                    else ""
+                ),
+                "",
+            ]
+        )
 
     # ── 各分支详情 ──
-    lines.extend([
-        "## 二、各分支 Cutoff 估计",
-        "",
-        "| 策略分支 | 说明 | 通过率 | LXF阈值 | 通过数/总数 | 逾期率 | 平均分 |",
-        "|:--------|:-----|:-----:|:------:|:----------:|:-----:|:-----:|",
-    ])
+    lines.extend(
+        [
+            "## 二、各分支 Cutoff 估计",
+            "",
+            "| 策略分支 | 说明 | 通过率 | LXF阈值 | 通过数/总数 | 逾期率 | 平均分 |",
+            "|:--------|:-----|:-----:|:------:|:----------:|:-----:|:-----:|",
+        ]
+    )
 
     for branch in sorted(parameters["strategy_type"].unique()):
         branch_data = parameters[parameters["strategy_type"] == branch]
@@ -90,10 +99,12 @@ def generate_markdown(
     lines.append("")
 
     # ── 建议项 ──
-    lines.extend([
-        "## 三、配置建议",
-        "",
-    ])
+    lines.extend(
+        [
+            "## 三、配置建议",
+            "",
+        ]
+    )
 
     # 逾期率偏高的分支
     if not parameters.empty:
@@ -105,18 +116,17 @@ def generate_markdown(
                     f"逾期率 {overdue*100:.2f}%，建议降低通过率或加大审核力度"
                 )
 
-    if not any(
-        (row.get("overdue_rate", 0) or 0) > 0.10
-        for _, row in parameters.iterrows()
-    ):
+    if not any((row.get("overdue_rate", 0) or 0) > 0.10 for _, row in parameters.iterrows()):
         lines.append("- ✅ 所有分支逾期率在可控范围内")
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        f"*报告由 risk_engine.simulation 自动生成*",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "*报告由 risk_engine.simulation 自动生成*",
+        ]
+    )
 
     return "\n".join(lines)
 
@@ -165,9 +175,7 @@ def show_best_worst(parameters: pd.DataFrame, pass_ratio: float = 0.5) -> str:
     if target.empty:
         # 取最近的通过率
         closest = (parameters["pass_ratio"] - pass_ratio).abs().min()
-        target = parameters[
-            (parameters["pass_ratio"] - pass_ratio).abs() == closest
-        ]
+        target = parameters[(parameters["pass_ratio"] - pass_ratio).abs() == closest]
 
     # 按逾期率排序
     sorted_target = target.sort_values("overdue_rate", ascending=True)

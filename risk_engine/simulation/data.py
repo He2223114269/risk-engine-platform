@@ -12,34 +12,56 @@
 
 from __future__ import annotations
 
-import sys
 import os
+import sys
 import warnings
 from datetime import datetime
 
 warnings.filterwarnings("ignore")
 
-import numpy as np
-import pandas as pd
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 
 # ── 项目路径 ──
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, PROJECT_ROOT)
 
-from risk_engine.toolkit.connectors import get_data
-from risk_engine.simulation.config.presets import SimulationConfig
-
+from risk_engine.simulation.config.presets import SimulationConfig  # noqa: E402
+from risk_engine.toolkit.connectors import get_data  # noqa: E402
 
 # ── 省份身份证前缀映射 ──
 PROVINCE_CODE_MAP = {
-    "11": "北京", "12": "天津", "13": "河北", "14": "山西",
-    "15": "内蒙古", "21": "辽宁", "22": "吉林", "23": "黑龙江",
-    "31": "上海市", "32": "江苏", "33": "浙江", "34": "安徽",
-    "35": "福建", "36": "江西省", "37": "山东", "41": "河南",
-    "42": "湖北", "43": "湖南省", "44": "广东", "45": "广西壮族自治区",
-    "46": "海南省", "50": "重庆", "51": "四川", "52": "贵州省",
-    "53": "云南", "54": "西藏", "61": "陕西", "62": "甘肃",
-    "63": "青海", "64": "宁夏回族自治区", "65": "新疆",
+    "11": "北京",
+    "12": "天津",
+    "13": "河北",
+    "14": "山西",
+    "15": "内蒙古",
+    "21": "辽宁",
+    "22": "吉林",
+    "23": "黑龙江",
+    "31": "上海市",
+    "32": "江苏",
+    "33": "浙江",
+    "34": "安徽",
+    "35": "福建",
+    "36": "江西省",
+    "37": "山东",
+    "41": "河南",
+    "42": "湖北",
+    "43": "湖南省",
+    "44": "广东",
+    "45": "广西壮族自治区",
+    "46": "海南省",
+    "50": "重庆",
+    "51": "四川",
+    "52": "贵州省",
+    "53": "云南",
+    "54": "西藏",
+    "61": "陕西",
+    "62": "甘肃",
+    "63": "青海",
+    "64": "宁夏回族自治区",
+    "65": "新疆",
 }
 
 
@@ -80,7 +102,7 @@ def fetch(mode_config: SimulationConfig) -> pd.DataFrame:
             age,
             case when mobile_no = bank_mobile_no then 1 else 0 end AS is_same_telelphon,
             round(return_red_envelope / pack_price, 4) AS subsidy_rate,
-            case when nation = '汉' then '汉族' when nation is not null then '非汉族' else '未知' end AS nation,
+            case when nation = '汉' then '汉族' when nation is not null then '非汉族' else '未知' end AS nation,  # noqa: E501
             is_married,
             education,
             approval_time,
@@ -179,7 +201,8 @@ def fetch(mode_config: SimulationConfig) -> pd.DataFrame:
 
     # 合并在网时长
     data = pd.merge(
-        data, online_data,
+        data,
+        online_data,
         left_on="mobile_no",
         right_on="telephone",
         how="left",
@@ -209,8 +232,7 @@ def _engineering(data: pd.DataFrame, cfg: SimulationConfig) -> pd.DataFrame:
 
     # 性别（从身份证第17位）
     data["gender"] = np.where(
-        data["id_number"].str[16].astype(int, errors="ignore") % 2 == 1,
-        1, 0
+        data["id_number"].str[16].astype(int, errors="ignore") % 2 == 1, 1, 0
     )  # 1=男, 0=女
 
     # 年龄 + 年龄区间
@@ -219,12 +241,14 @@ def _engineering(data: pd.DataFrame, cfg: SimulationConfig) -> pd.DataFrame:
             birth = datetime.strptime(id_str[6:14], "%Y%m%d")
             today = datetime.today()
             return today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
-        except:
+        except (ValueError, AttributeError):
             return None
 
     data["age"] = data["id_number"].apply(_calc_age)
     data["age_interval"] = pd.cut(
-        data["age"], cfg.age_bins, labels=cfg.age_labels,
+        data["age"],
+        cfg.age_bins,
+        labels=cfg.age_labels,
     )
 
     # 金额区间
@@ -234,7 +258,9 @@ def _engineering(data: pd.DataFrame, cfg: SimulationConfig) -> pd.DataFrame:
         data["order_amt_yuan"],
     )
     data["amt_interval"] = pd.cut(
-        data["order_amt_yuan"].fillna(0), cfg.amt_bins, labels=cfg.amt_labels,
+        data["order_amt_yuan"].fillna(0),
+        cfg.amt_bins,
+        labels=cfg.amt_labels,
     )
 
     # 本异网
@@ -245,20 +271,13 @@ def _engineering(data: pd.DataFrame, cfg: SimulationConfig) -> pd.DataFrame:
 
     # 省份是否一致
     data["province_id"] = data["id_number"].apply(_extract_province_from_id)
-    data["province_is_one"] = np.where(
-        data["province_id"] == cfg.province, 1, 0
-    )
+    data["province_is_one"] = np.where(data["province_id"] == cfg.province, 1, 0)
 
     # 新老客
-    data["old_new_customer"] = np.where(
-        data["onlinetime"].isin([3, 4, 5]), "老客户", "新客户"
-    )
+    data["old_new_customer"] = np.where(data["onlinetime"].isin([3, 4, 5]), "老客户", "新客户")
 
     # 业务场景字段（兼容新旧列名）
     if "province" in data.columns:
         pass  # DWS 的 province 列
 
     return data
-
-
-

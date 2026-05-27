@@ -13,7 +13,6 @@ Cutoff 估计 — 通过率 ↔ LXF 阈值 ↔ 预期逾期率
 from __future__ import annotations
 
 import pandas as pd
-import numpy as np
 
 
 def estimate_branch(
@@ -51,15 +50,19 @@ def estimate_branch(
         overdue_count = int(passed[label_col].sum()) if label_col in passed.columns else 0
         overdue_rate = overdue_count / pass_count if pass_count > 0 else None
 
-        results.append({
-            "pass_ratio": ratio,
-            "cutoff_score": float(cutoff_score) if cutoff_score is not None else None,
-            "pass_count": pass_count,
-            "total_count": total,
-            "overdue_count": overdue_count,
-            "overdue_rate": round(overdue_rate, 4) if overdue_rate is not None else None,
-            "avg_score": round(float(passed[score_col].mean()), 1) if not passed.empty else None,
-        })
+        results.append(
+            {
+                "pass_ratio": ratio,
+                "cutoff_score": float(cutoff_score) if cutoff_score is not None else None,
+                "pass_count": pass_count,
+                "total_count": total,
+                "overdue_count": overdue_count,
+                "overdue_rate": round(overdue_rate, 4) if overdue_rate is not None else None,
+                "avg_score": (
+                    round(float(passed[score_col].mean()), 1) if not passed.empty else None
+                ),
+            }
+        )
 
     return results
 

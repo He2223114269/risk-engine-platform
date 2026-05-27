@@ -12,19 +12,12 @@
 
 from __future__ import annotations
 
-import sys
-import os
-from datetime import datetime
 from pathlib import Path
 
-import pandas as pd
-
-from risk_engine.simulation.config.presets import SimulationConfig
+from risk_engine.simulation import classifier, estimator, snapshot
 from risk_engine.simulation import data as sim_data
-from risk_engine.simulation import classifier
-from risk_engine.simulation import estimator
 from risk_engine.simulation import report as sim_report
-from risk_engine.simulation import snapshot
+from risk_engine.simulation.config.presets import SimulationConfig
 
 
 def run(
@@ -76,7 +69,7 @@ def run(
 
     # ── 步骤 2: 决策树分类 ──
     if verbose:
-        print(f"  [2/5] 决策树分类...")
+        print("  [2/5] 决策树分类...")
 
     data = classifier.classify(data)
 
@@ -96,12 +89,12 @@ def run(
     )
 
     if verbose:
-        combos = params.groupby("strategy_type").size().sum()
+        params.groupby("strategy_type").size().sum()
         print(f"        生成 {len(params):,} 条估算结果")
 
     # ── 步骤 4: 生成报告 ──
     if verbose:
-        print(f"  [4/5] 生成报告...")
+        print("  [4/5] 生成报告...")
 
     full_config = mode_config.to_dict()
     summary = sim_report.create_summary(params)
@@ -117,7 +110,7 @@ def run(
     folder = None
     if save:
         if verbose:
-            print(f"\n  [5/5] 保存快照...")
+            print("\n  [5/5] 保存快照...")
 
         folder = snapshot.save_snapshot(
             config=full_config,
@@ -132,7 +125,7 @@ def run(
             print(f"        已保存至: {folder}")
 
     if verbose:
-        print(f"\n  ✅ 仿真完成")
+        print("\n  ✅ 仿真完成")
 
     return {
         "config": full_config,
@@ -157,6 +150,7 @@ def run_from_config_file(config_path: str, **overrides) -> dict:
     """
     # 动态导入配置文件
     import importlib.util
+
     config_path = Path(config_path)
     spec = importlib.util.spec_from_file_location(config_path.stem, config_path)
     module = importlib.util.module_from_spec(spec)
