@@ -193,7 +193,7 @@ def score_all(df: pd.DataFrame) -> pd.DataFrame:
         match = re.search(r"([\d.]+)\s*万元", capital_str)
         try:
             capital = float(match.group(1)) if match else 0
-        except:
+        except Exception:
             return 50.0
 
         # 映射：0万→20分, 10万→40分, 50万→60分, 200万→80分, 1000万+→100分

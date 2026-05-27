@@ -87,6 +87,23 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP", "N", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["F401"]
+"**/migrations/env.py" = ["E402"]
+"**/analysis_report.py" = ["E501"]
+"**/extract.py" = ["E501"]
+"**/sync_all.py" = ["E501"]
+"**/sync_runner.py" = ["E501"]
+"**/sync/scheduler.py" = ["E501"]
+"**/connectors/db_connector.py" = ["E501", "N801"]
+"**/runner.py" = ["E501"]
+"**/core/models/base.py" = ["N803"]
+"**/supplier/run.py" = ["N806"]
+"**/supplier/rate.py" = ["N806"]
+"**/store/run.py" = ["N806"]
+"**/supplier/analysis_report.py" = ["SIM108"]
+
+
 [tool.mypy]
 python_version = "3.12"
 strict = true

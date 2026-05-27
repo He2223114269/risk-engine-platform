@@ -21,7 +21,7 @@ from risk_engine.toolkit.sync.ddl_registry import (
     get_table,
     get_tables_by_schema,
 )
-from risk_engine.toolkit.sync.sync_tracker import finish_sync, start_sync
+from risk_engine.toolkit.sync.sync_tracker import finish_sync, get_last_sync, start_sync
 
 
 def run_sync(

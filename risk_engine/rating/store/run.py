@@ -142,7 +142,7 @@ def _write_to_db(df: pd.DataFrame, data_date: str):
             else:
                 try:
                     vals.append(v.item() if hasattr(v, "item") else v)
-                except:
+                except Exception:
                     vals.append(v)
         try:
             cursor.execute(sql, tuple(vals))
