@@ -7,10 +7,11 @@
 
 from __future__ import annotations
 
-import pandas as pd
-import pymysql
 from datetime import datetime
 from pathlib import Path
+
+import pandas as pd
+import pymysql
 
 from risk_engine.toolkit.connectors import get_data
 

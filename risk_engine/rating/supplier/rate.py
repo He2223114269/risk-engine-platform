@@ -8,8 +8,9 @@
 
 from __future__ import annotations
 
-import pandas as pd
 from typing import Optional
+
+import pandas as pd
 
 from risk_engine.rating.base import assign_rating_by_percentile
 from risk_engine.rating.supplier.config import RATING_THRESHOLDS

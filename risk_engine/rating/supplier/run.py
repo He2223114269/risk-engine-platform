@@ -15,21 +15,22 @@
 
 from __future__ import annotations
 
-import pandas as pd
-import numpy as np
-import pymysql
 from datetime import date, datetime
 from typing import Optional
 
-from risk_engine.toolkit.connectors import get_data
+import numpy as np
+import pandas as pd
+import pymysql
+
 from risk_engine.rating.supplier.extract import (
     extract_all,
+    extract_staff_count,
     extract_store_quality,
     extract_yzf_rating,
-    extract_staff_count,
 )
-from risk_engine.rating.supplier.score import score_all
 from risk_engine.rating.supplier.rate import assign_ratings
+from risk_engine.rating.supplier.score import score_all
+from risk_engine.toolkit.connectors import get_data
 
 
 def run_supplier_rating(

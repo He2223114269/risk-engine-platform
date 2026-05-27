@@ -1,14 +1,17 @@
 """套餐评级 - 一键运行"""
 
 from __future__ import annotations
-import pandas as pd
-import numpy as np
+
 from datetime import datetime
 from typing import Optional
-from risk_engine.toolkit.connectors import get_data
+
+import numpy as np
+import pandas as pd
+
 from risk_engine.rating.package.extract import extract_all
-from risk_engine.rating.package.score import score_all
 from risk_engine.rating.package.rate import assign_ratings
+from risk_engine.rating.package.score import score_all
+from risk_engine.toolkit.connectors import get_data
 
 
 def run_package_rating(

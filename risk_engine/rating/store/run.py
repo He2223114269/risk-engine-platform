@@ -11,19 +11,20 @@
 
 from __future__ import annotations
 
-import pandas as pd
-import numpy as np
 from datetime import date, datetime
 from typing import Optional
 
-from risk_engine.toolkit.connectors import get_data
+import numpy as np
+import pandas as pd
+
 from risk_engine.rating.store.extract import (
     extract_all,
     extract_channel_level,
     extract_supplier_rating,
 )
-from risk_engine.rating.store.score import score_all
 from risk_engine.rating.store.rate import assign_ratings
+from risk_engine.rating.store.score import score_all
+from risk_engine.toolkit.connectors import get_data
 
 
 def run_store_rating(

@@ -14,7 +14,8 @@
 """
 
 from __future__ import annotations
-from sqlalchemy import Column, DateTime, Integer, String, Boolean, func
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, func
 from sqlalchemy.orm import DeclarativeBase
 
 __all__ = ["Base", "TimestampMixin"]

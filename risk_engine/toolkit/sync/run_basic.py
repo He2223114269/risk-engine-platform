@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """同步三张基础表到本地 MySQL"""
 
-import sys, os
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from risk_engine.toolkit.connectors import get_data
-import pandas as pd
-import numpy as np
-import pymysql
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
+import pymysql
+
+from risk_engine.toolkit.connectors import get_data
 
 sr = get_data(data_type="risk")
 lc = pymysql.connect(

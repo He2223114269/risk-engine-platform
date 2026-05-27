@@ -16,13 +16,14 @@
 
 from __future__ import annotations
 
+from datetime import date
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional
-from datetime import date
 
-from risk_engine.toolkit.sync.runner import run_sync
 from risk_engine.toolkit.sync.ddl_registry import ALL_TABLES
+from risk_engine.toolkit.sync.runner import run_sync
 
 router = APIRouter(prefix="/api/sync", tags=["数据同步"])
 
@@ -87,8 +88,8 @@ def list_tables():
 @router.get("/status")
 def sync_status(table: Optional[str] = None):
     """查看同步状态。"""
-    from risk_engine.toolkit.sync.sync_tracker import ensure_tracker_table
     from risk_engine.toolkit.connectors import get_data
+    from risk_engine.toolkit.sync.sync_tracker import ensure_tracker_table
 
     ensure_tracker_table()
     conn = get_data(data_type="local")

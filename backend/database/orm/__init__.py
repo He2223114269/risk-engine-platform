@@ -21,10 +21,11 @@
 
 from __future__ import annotations
 
+from backend.database.orm.package_rating import PackageEvaluation
+from backend.database.orm.store_rating import StoreEvaluation
+
 # 统一导出所有 ORM 模型，方便外部引用
 from backend.database.orm.supplier_rating import SupplierEvaluation
-from backend.database.orm.store_rating import StoreEvaluation
-from backend.database.orm.package_rating import PackageEvaluation
 
 __all__ = [
     "SupplierEvaluation",

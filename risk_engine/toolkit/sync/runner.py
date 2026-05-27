@@ -8,20 +8,21 @@
 
 from __future__ import annotations
 
-import pandas as pd
-import numpy as np
 from datetime import datetime
 from typing import Optional
+
+import numpy as np
+import pandas as pd
 
 from risk_engine.toolkit.connectors import get_data
 from risk_engine.toolkit.sync.ddl_registry import (
     ALL_TABLES,
-    get_table,
-    get_starrocks_mapping,
-    get_tables_by_schema,
     DDLEntry,
+    get_starrocks_mapping,
+    get_table,
+    get_tables_by_schema,
 )
-from risk_engine.toolkit.sync.sync_tracker import start_sync, finish_sync
+from risk_engine.toolkit.sync.sync_tracker import finish_sync, start_sync
 
 
 def run_sync(

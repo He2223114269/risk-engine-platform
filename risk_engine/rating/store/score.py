@@ -13,15 +13,15 @@
 
 from __future__ import annotations
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from risk_engine.rating.base import (
+    map_score_by_percentile,
     map_score_inverse,
     map_score_linear,
-    map_score_by_percentile,
 )
-from risk_engine.rating.store.config import DIMENSION_WEIGHTS, CHANNEL_LEVEL_SCORE
+from risk_engine.rating.store.config import CHANNEL_LEVEL_SCORE, DIMENSION_WEIGHTS
 
 
 def score_all(df: pd.DataFrame) -> pd.DataFrame:

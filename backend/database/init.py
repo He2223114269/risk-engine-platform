@@ -48,8 +48,8 @@ def main():
     )
     args = parser.parse_args()
 
-    from backend.database.orm.base import Base
     from backend.database import _import_all_models
+    from backend.database.orm.base import Base
 
     _import_all_models()
 
@@ -81,9 +81,10 @@ def main():
 
 def _seed_data():
     """播种基础数据（通过率参数等）"""
-    from backend.database import SessionLocal
-    from backend.config.settings import BackendSettings
     from sqlalchemy import text
+
+    from backend.config.settings import BackendSettings
+    from backend.database import SessionLocal
 
     settings = BackendSettings()
     # 只在 MySQL 下播种

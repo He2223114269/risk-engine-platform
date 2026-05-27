@@ -42,9 +42,10 @@
 from __future__ import annotations
 
 import os
-import pymysql
-import pandas as pd
 from typing import Optional
+
+import pandas as pd
+import pymysql
 
 __all__ = ["get_data"]
 

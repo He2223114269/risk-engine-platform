@@ -3,7 +3,7 @@
 ================================
 """
 
-from sqlalchemy import Column, String, Integer, Date, Text, VARCHAR, INT, DECIMAL, DATE
+from sqlalchemy import DATE, DECIMAL, INT, VARCHAR, Column, Date, Integer, String, Text
 
 from backend.database.orm.base import Base
 

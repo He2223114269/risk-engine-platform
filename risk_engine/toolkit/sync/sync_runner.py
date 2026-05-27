@@ -8,14 +8,15 @@
 
 from __future__ import annotations
 
-import pandas as pd
-import numpy as np
 from datetime import datetime
 from typing import Optional
 
+import numpy as np
+import pandas as pd
+
 from risk_engine.toolkit.connectors import get_data
 from risk_engine.toolkit.sync.sync_config import SYNC_TABLES, SyncTableConfig
-from risk_engine.toolkit.sync.sync_tracker import start_sync, finish_sync
+from risk_engine.toolkit.sync.sync_tracker import finish_sync, start_sync
 
 
 def run_sync(

@@ -11,14 +11,15 @@ v3 变更：
 
 from __future__ import annotations
 
-import pandas as pd
-import numpy as np
 from typing import Optional
 
+import numpy as np
+import pandas as pd
+
 from risk_engine.rating.base import (
+    map_score_by_percentile,
     map_score_inverse,
     map_score_linear,
-    map_score_by_percentile,
     map_yzf_rating,
 )
 from risk_engine.rating.supplier.config import (

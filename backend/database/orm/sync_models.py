@@ -15,7 +15,7 @@
 ============================================================================
 """
 
-from sqlalchemy import Column, String, Integer, BigInteger, Text, DateTime, Date, DECIMAL, Float
+from sqlalchemy import DECIMAL, BigInteger, Column, Date, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import declarative_base
 
 SyncBase = declarative_base()

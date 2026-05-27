@@ -1,9 +1,7 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,13 +12,15 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+import os
+
 # ── 加载项目 ORM 模型 ──
-import sys, os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from backend.database.orm.base import Base
 from backend.database import _import_all_models
+from backend.database.orm.base import Base
 
 _import_all_models()
 target_metadata = Base.metadata

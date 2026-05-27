@@ -1,8 +1,10 @@
 """套餐评级 - 评分逻辑"""
 
 from __future__ import annotations
+
 import pandas as pd
-from risk_engine.rating.base import map_score_inverse, map_score_linear, map_score_by_percentile
+
+from risk_engine.rating.base import map_score_by_percentile, map_score_inverse, map_score_linear
 from risk_engine.rating.package.config import DIMENSION_WEIGHTS
 
 

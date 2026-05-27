@@ -13,8 +13,8 @@
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
 from datetime import date, datetime
+from typing import Optional
 
 
 @dataclass

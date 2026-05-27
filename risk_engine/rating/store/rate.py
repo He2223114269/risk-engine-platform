@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import pandas as pd
+
 from risk_engine.rating.base import assign_rating_by_percentile
 from risk_engine.rating.store.config import RATING_THRESHOLDS
 

@@ -1,9 +1,12 @@
 """套餐评级 - 数据提取（简化版）"""
 
 from __future__ import annotations
-import pandas as pd
+
 from datetime import datetime, timedelta
 from typing import Optional
+
+import pandas as pd
+
 from risk_engine.toolkit.connectors import get_data
 
 _DWS = "dws.dws_credit_yzf_order_complete"

@@ -30,8 +30,9 @@
 from __future__ import annotations
 
 import logging
+
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from backend.config.settings import BackendSettings
 from backend.database.orm.base import Base
@@ -113,9 +114,9 @@ def _import_all_models():
     否则 create_all 不会创建该表。
     """
     # 导入各 ORM 模型（按需添加）
-    import backend.database.orm.supplier_rating  # noqa: F401
-    import backend.database.orm.store_rating  # noqa: F401
     import backend.database.orm.package_rating  # noqa: F401
+    import backend.database.orm.store_rating  # noqa: F401
+    import backend.database.orm.supplier_rating  # noqa: F401
 
 
 def _print_tables():

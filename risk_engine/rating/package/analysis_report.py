@@ -3,9 +3,12 @@
 """
 
 from __future__ import annotations
-import pandas as pd
+
 from datetime import datetime
 from pathlib import Path
+
+import pandas as pd
+
 from risk_engine.toolkit.connectors import get_data
 
 

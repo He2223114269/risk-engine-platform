@@ -14,17 +14,17 @@
 """
 
 from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    Date,
-    DateTime,
-    Text,
-    VARCHAR,
-    INT,
-    DECIMAL,
     DATE,
     DATETIME,
+    DECIMAL,
+    INT,
+    VARCHAR,
+    Column,
+    Date,
+    DateTime,
+    Integer,
+    String,
+    Text,
 )
 from sqlalchemy.sql import func
 
