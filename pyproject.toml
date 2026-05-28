@@ -5,6 +5,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["risk_engine*", "backend*"]
 
+[project.scripts]
+simulate = "risk_engine.simulation.__main__:main"
+
 [project]
 name = "risk-engine-platform"
 version = "0.1.0"

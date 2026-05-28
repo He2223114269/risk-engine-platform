@@ -13,7 +13,12 @@
 
 from __future__ import annotations
 
-from pydantic_settings import BaseSettings
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    # 未安装 pydantic-settings 时降级（Windows 常见）
+    from pydantic import BaseSettings
+
 
 __all__ = ["RiskEngineSettings"]
 

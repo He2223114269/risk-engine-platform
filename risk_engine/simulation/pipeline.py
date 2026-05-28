@@ -16,7 +16,102 @@ from risk_engine.simulation import estimator
 from risk_engine.simulation import report as sim_report
 from risk_engine.simulation import snapshot
 from risk_engine.model_registry import load as load_model
+from pathlib import Path
+from typing import Any
+
+import yaml
+
 from risk_engine.simulation.config.presets import SimulationConfig
+
+
+# ── 预设配置映射 ──
+_CONFIG_PRESETS: dict[str, SimulationConfig] = {}
+
+
+def _init_presets():
+    """懒加载预设配置，避免 import 循环。"""
+    if _CONFIG_PRESETS:
+        return
+    from risk_engine.simulation.config.presets import Jiangxi_v1
+
+    _CONFIG_PRESETS["jiangxi_v1"] = Jiangxi_v1
+    try:
+        from risk_engine.simulation.config.zhejiang_v1 import Zhejiang_v1
+
+        _CONFIG_PRESETS["zhejiang_v1"] = Zhejiang_v1
+    except ImportError:
+        pass
+
+
+def list_presets() -> list[str]:
+    """列出所有可用的预设配置名。"""
+    _init_presets()
+    return sorted(_CONFIG_PRESETS.keys())
+
+
+def get_preset(name: str) -> SimulationConfig:
+    """按名称获取预设配置。"""
+    _init_presets()
+    if name not in _CONFIG_PRESETS:
+        raise ValueError(
+            f"未知预设: {name}，可用: {list(_CONFIG_PRESETS.keys())}"
+        )
+    return _CONFIG_PRESETS[name]
+
+
+def run_from_config_file(config_path: str | Path, **overrides: Any) -> dict:
+    """
+    从 YAML 配置文件加载配置并运行仿真。
+
+    参数:
+        config_path: YAML 配置文件路径
+        overrides:   覆盖字段（优先级高于文件）
+                     支持 preset 名称引用
+
+    YAML 文件格式:
+        preset: jiangxi_v1              # 可选：继承预设
+        province: 江西省
+        data_start: 2025-01-01
+        data_date: 2025-06-10
+        tree_version: jiangxi_v1
+        pass_ratios: [0.1, 0.5, 0.9]
+        # ... 其余 SimulationConfig 字段
+
+    返回:
+        与 run() 相同的结果字典
+    """
+    config_path = Path(config_path)
+    if not config_path.exists():
+        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+
+    with open(config_path, encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+
+    if not isinstance(raw, dict):
+        raise ValueError(f"配置文件格式错误: 预期 dict，得到 {type(raw)}")
+
+    # 如果有 preset，先加载预设再覆盖
+    preset_name = raw.pop("preset", None)
+    if preset_name:
+        cfg = get_preset(preset_name).clone()
+    else:
+        cfg = SimulationConfig()
+
+    # 从 YAML 覆盖字段
+    for key, value in raw.items():
+        if hasattr(cfg, key):
+            setattr(cfg, key, value)
+        else:
+            import warnings
+
+            warnings.warn(f"未知配置字段: {key}，已忽略")
+
+    # overrides 优先级最高
+    for key, value in overrides.items():
+        if hasattr(cfg, key):
+            setattr(cfg, key, value)
+
+    return run(cfg)
 
 
 def run(
