@@ -1,4 +1,8 @@
-"""同步三张基础表到本地 MySQL"""
+"""同步基础表到本地 MySQL（按层分库）
+
+ODS 层表 → ods 库
+DWS 层表 → dws 库
+"""
 
 import os
 import sys
@@ -14,45 +18,45 @@ import pymysql
 from risk_engine.toolkit.connectors import get_data
 
 sr = get_data(data_type="risk")
+# 不指定 database，后续用 db.table 全限定名
 lc = pymysql.connect(
-    host="172.31.80.1", port=3306, user="root", password="222311", database="risk_control"
+    host="172.31.80.1", port=3306, user="root", password="222311", charset="utf8mb4"
 )
 cur = lc.cursor()
 B = 10000
 
 
-def create_table(cursor, table_name, columns):
+def create_table(cursor, db_name, table_name, columns):
     col_defs = []
     for c in columns:
         col_defs.append("`" + c + "` TEXT")
+    full_name = "`" + db_name + "`.`" + table_name + "`"
     sql = (
-        "CREATE TABLE `"
-        + table_name
-        + "` ("
+        "CREATE TABLE " + full_name + " ("
         + ",".join(col_defs)
         + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     )
-    cursor.execute("DROP TABLE IF EXISTS `" + table_name + "`")
+    cursor.execute("DROP TABLE IF EXISTS " + full_name)
     cursor.execute(sql)
 
 
-def sync_table(local_name, select_sql):
+def sync_table(db_name, local_name, select_sql):
     total = 0
     offset = 0
-    print("[" + datetime.now().strftime("%H:%M") + "] " + local_name)
+    full_name = "`" + db_name + "`.`" + local_name + "`"
+    print("[" + datetime.now().strftime("%H:%M") + "] " + db_name + "." + local_name)
 
-    # 取一行获取字段
     batch = sr.get_data(select_sql + " LIMIT 1")
     if batch.empty:
         print("  无数据")
         return 0
     cols = list(batch.columns)
-    create_table(cur, local_name, cols)
+    create_table(cur, db_name, local_name, cols)
     lc.commit()
 
     cq = ",".join(["`" + c + "`" for c in cols])
     ph = ",".join(["%s"] * len(cols))
-    ins = "INSERT INTO `" + local_name + "` (" + cq + ") VALUES (" + ph + ")"
+    ins = "INSERT INTO " + full_name + " (" + cq + ") VALUES (" + ph + ")"
 
     while True:
         batch = sr.get_data(select_sql + " LIMIT " + str(B) + " OFFSET " + str(offset))
@@ -68,26 +72,31 @@ def sync_table(local_name, select_sql):
         if offset % 50000 == 0:
             print("  " + str(total) + " 行...")
 
-    print("  " + local_name + ": " + str(total) + " 行")
+    print("  " + db_name + "." + local_name + ": " + str(total) + " 行")
     return total
 
 
-# 1. v3_store（全量）
-sync_table("ods_ods_ts_v3_order_store", "SELECT * FROM ods.ods_ts_v3_order_store")
-
-# 2. 风控结果表
+# ── ODS 层 → ods 库 ──
+sync_table("ods", "ods_ts_v3_order_store", "SELECT * FROM ods.ods_ts_v3_order_store")
 sync_table(
-    "ods_ods_ts_order_white_list_control",
+    "ods",
+    "ods_ts_order_white_list_control",
     "SELECT * FROM ods.ods_ts_order_white_list_control WHERE type = '淘顺实时授信'",
 )
-
-# 3. 申请表
 sync_table(
-    "ods_ods_ts_credit_yzf_order_grant_apply",
+    "ods",
+    "ods_ts_credit_yzf_order_grant_apply",
     "SELECT * FROM ods.ods_ts_credit_yzf_order_grant_apply WHERE business_type = '02'",
+)
+
+# ── DWS 层 → dws 库 ──
+sync_table(
+    "dws",
+    "dws_credit_yzf_order_complete",
+    "SELECT * FROM dws.dws_credit_yzf_order_complete WHERE source_business_type = '淘顺实时授信'",
 )
 
 cur.close()
 lc.close()
 sr.close()
-print("\n✅ 三张表同步完成")
+print("\n✅ 同步完成")

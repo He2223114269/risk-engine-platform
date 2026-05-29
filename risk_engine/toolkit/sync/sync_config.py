@@ -13,6 +13,7 @@ class SyncTableConfig:
     """单张表的同步配置"""
 
     name: str  # 本地表名
+    db_name: str = "risk_control"  # 目标库 (ods/dws/risk_control)
     starrocks_table: str  # StarRocks 原始表名
     description: str  # 说明
     row_estimate: int  # 行数估算
@@ -25,7 +26,8 @@ class SyncTableConfig:
 
 SYNC_TABLES = [
     SyncTableConfig(
-        name="dws_order_complete",
+        name="dws_credit_yzf_order_complete",
+        db_name="dws",
         starrocks_table="dws.dws_credit_yzf_order_complete",
         description="订单+还款主宽表",
         row_estimate=1_393_089,
@@ -34,7 +36,8 @@ SYNC_TABLES = [
         incremental_key="complete_time",
     ),
     SyncTableConfig(
-        name="dwd_repayment",
+        name="dwd_credit_yzf_order_complete_repayment",
+        db_name="dwd",
         starrocks_table="dwd.dwd_credit_yzf_order_complete_repayment",
         description="DWD 还款宽表（按订单号关联）",
         row_estimate=5_000_000,
@@ -43,16 +46,18 @@ SYNC_TABLES = [
         incremental_key="repay_date",
     ),
     SyncTableConfig(
-        name="ods_repayment",
+        name="ods_ts_credit_yzf_order_repayment",
+        db_name="ods",
         starrocks_table="ods.ods_ts_credit_yzf_order_repayment",
         description="还款明细原始表",
         row_estimate=50_530_527,
-        filter_sql="1=1",  # 通过 order_no 关联筛选
+        filter_sql="1=1",
         batch_size=20000,
         incremental_key="repay_date",
     ),
     SyncTableConfig(
-        name="ods_grant_apply",
+        name="ods_ts_credit_yzf_order_grant_apply",
+        db_name="ods",
         starrocks_table="ods.ods_ts_credit_yzf_order_grant_apply",
         description="授信申请表",
         row_estimate=2_310_465,
@@ -61,7 +66,8 @@ SYNC_TABLES = [
         incremental_key="add_time",
     ),
     SyncTableConfig(
-        name="ods_risk_control",
+        name="ods_ts_order_white_list_control",
+        db_name="ods",
         starrocks_table="ods.ods_ts_order_white_list_control",
         description="风控结果表",
         row_estimate=928_107,
@@ -70,16 +76,18 @@ SYNC_TABLES = [
         incremental_key="add_time",
     ),
     SyncTableConfig(
-        name="ods_order_complete",
+        name="ods_ts_credit_yzf_order_info_complete",
+        db_name="ods",
         starrocks_table="ods.ods_ts_credit_yzf_order_info_complete",
         description="竣工表",
         row_estimate=1_515_653,
-        filter_sql="1=1",  # 通过业务类型关联
+        filter_sql="1=1",
         batch_size=10000,
         incremental_key="complete_time",
     ),
     SyncTableConfig(
-        name="ods_v3_store",
+        name="ods_ts_v3_order_store",
+        db_name="ods",
         starrocks_table="ods.ods_ts_v3_order_store",
         description="门店等级表（全量，不需要筛选）",
         row_estimate=15_843,

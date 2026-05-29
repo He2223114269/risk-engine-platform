@@ -146,22 +146,25 @@ def _sync_table(
     return total_rows
 
 
+def _qualified(tbl: SyncTableConfig) -> str:
+    """返回全限定表名 `db.table`"""
+    return f"`{tbl.db_name}`.`{tbl.name}`"
+
+
 def _write_to_mysql(tbl: SyncTableConfig, df: pd.DataFrame, sync_date: str):
     """分批写入本地 MySQL。"""
     conn = get_data(data_type="local")
 
-    # 建表（如果不存在）
     _ensure_local_table(conn, tbl)
 
-    # 清除旧数据（全量模式）
-    conn.execute_sql(f"DELETE FROM {tbl.name}")
+    full_name = _qualified(tbl)
+    conn.execute_sql(f"DELETE FROM {full_name}")
 
-    # 分批写入
     cursor = conn.conn.cursor()
     cols = list(df.columns)
     ph = ",".join(["%s"] * len(cols))
     cq = ",".join([f"`{c}`" for c in cols])
-    sql = f"INSERT INTO {tbl.name} ({cq}) VALUES ({ph})"
+    sql = f"INSERT INTO {full_name} ({cq}) VALUES ({ph})"
 
     total = len(df)
     written = 0
@@ -187,7 +190,6 @@ def _write_to_mysql(tbl: SyncTableConfig, df: pd.DataFrame, sync_date: str):
             conn.conn.commit()
             written += len(batch)
         except Exception:
-            # 逐行写入（处理可能有问题的数据）
             conn.conn.rollback()
             for vals in values_list:
                 try:
@@ -202,21 +204,20 @@ def _write_to_mysql(tbl: SyncTableConfig, df: pd.DataFrame, sync_date: str):
 
     cursor.close()
     conn.close()
-    print(f"    💾 写入 {written:,}/{total:,} 行到 {tbl.name}")
+    print(f"    💾 写入 {written:,}/{total:,} 行到 {full_name}")
 
 
 def _ensure_local_table(conn, tbl: SyncTableConfig):
     """检查本地表是否存在，不存在则从 StarRocks 获取建表信息创建。"""
+    full_name = _qualified(tbl)
     try:
-        conn.get_data(f"SELECT 1 FROM {tbl.name} LIMIT 1")
-        return  # 表已存在
+        conn.get_data(f"SELECT 1 FROM {full_name} LIMIT 1")
+        return
     except Exception:
         pass
 
-    # 获取 StarRocks 表结构
     sr = get_data(data_type="risk")
     try:
-        # 通过 LIMIT 0 获取字段
         sample = sr.get_data(f"SELECT * FROM {tbl.starrocks_table} WHERE {tbl.filter_sql} LIMIT 0")
         if sample.empty:
             sample = sr.get_data(f"SELECT * FROM {tbl.starrocks_table} LIMIT 0")
@@ -240,25 +241,15 @@ def _ensure_local_table(conn, tbl: SyncTableConfig):
 
         cols_str = ",\n    ".join(col_defs)
         pk = ", ".join(tbl.index_cols) if tbl.index_cols else "`_row_id` INT AUTO_INCREMENT"
-
+        create_sql = f"CREATE TABLE {full_name} (\n    {cols_str},"
         if tbl.index_cols:
-            create_sql = f"""
-                CREATE TABLE {tbl.name} (
-                    {cols_str},
-                    PRIMARY KEY ({pk})
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """
+            create_sql += f"\n    PRIMARY KEY ({pk})"
         else:
-            create_sql = f"""
-                CREATE TABLE {tbl.name} (
-                    `_row_id` INT AUTO_INCREMENT,
-                    {cols_str},
-                    PRIMARY KEY (`_row_id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """
+            create_sql += "\n    `_row_id` INT AUTO_INCREMENT,\n    PRIMARY KEY (`_row_id`)"
+        create_sql += "\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
 
         conn.execute_sql(create_sql)
-        print(f"    📦 本地表 {tbl.name} 已自动创建")
+        print(f"    📦 本地表 {full_name} 已自动创建")
 
     finally:
         sr.close()
